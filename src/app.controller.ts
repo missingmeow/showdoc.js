@@ -1,5 +1,4 @@
-import { Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Controller, Get, Post, Query, Redirect } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
@@ -7,14 +6,14 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getHello(@Res() res: Response) {
-    res.setHeader('location', '/web#/');
-    res.status(302).send();
+  @Redirect('web/#', 302)
+  getHello() {
+    return;
   }
 
   @Post('server/index.php')
-  phpIndex(@Req() req: Request, @Query('s') s, @Res() res: Response) {
-    res.setHeader('location', s);
-    res.status(302).send();
+  @Redirect('', 302)
+  phpIndex(@Query('s') url: string) {
+    return { url };
   }
 }
