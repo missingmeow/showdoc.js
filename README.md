@@ -35,6 +35,8 @@ $ npm install
 
 ## Running the app
 
+before running, please copy and rename file `sqlite/showdoc.db.default.php` to `sqlite/showdoc.db.php`.
+
 ```bash
 # development
 $ npm run start
