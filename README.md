@@ -6,6 +6,26 @@
 
 当前对应的 `showdoc` 版本为 [2.8.7](https://github.com/star7th/showdoc/releases/tag/v2.8.7)。
 
+## Notice
+
+### sqlite3
+
+关于使用 `sqlite3` 的库问题，这里使用的是 [better-sqlite3](https://github.com/JoshuaWise/better-sqlite3), 但由于这个库安装时需要进行编译，可能需要安装对应平台的开发套件，如果之前没有安装过并且嫌麻烦的话，可以替换使用性能没那么强的 [sqlite3](https://github.com/mapbox/node-sqlite3)。
+
+```bash
+# 操作命令
+$ npm uninstall better-sqlite3
+$ npm install sqlite3 --save
+```
+
+```ts
+// app.module.ts 中修改使用的类型
+TypeOrmModule.forRoot({
+  type: 'sqlite',
+  database: '../sqlite/showdoc.db.php'
+})
+```
+
 ## Installation
 
 ```bash

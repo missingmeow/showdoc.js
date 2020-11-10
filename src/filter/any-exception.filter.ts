@@ -14,6 +14,10 @@ export class AnyExceptionFilter<T> implements ExceptionFilter {
         ? exception.getResponse()
         : { statusCode: status, message: 'Unknown Error', error: 'Internal Server Error' };
 
+    if (!(exception instanceof HttpException)) {
+      logger.error(exception.toString());
+    }
+
     logger.error({
       ip: req.ip,
       method: req.method,
