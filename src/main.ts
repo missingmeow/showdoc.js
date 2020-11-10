@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { AnyExceptionFilter } from './filter/any-exception.filter';
@@ -17,6 +18,17 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggingInterceptor());
   // 全局过滤器
   app.useGlobalFilters(new AnyExceptionFilter());
+
+  // 添加 OpenApi
+  const options = new DocumentBuilder()
+    .setTitle('Showdoc.js API')
+    .setDescription('本系统的 API 接口直接由原网页调试而来，参考原服务器数据的返回格式，并未做其他额外的修改。')
+    .setVersion('1.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, options);
+  SwaggerModule.setup('api', app, document);
+
+  // 监听启动服务器
   await app.listen(3000);
 }
 bootstrap();

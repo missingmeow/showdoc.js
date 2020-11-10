@@ -1,7 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { sendResult } from 'src/utils/send.util';
 import { OptionsService } from './options.service';
 
+@ApiTags('common')
 @Controller('api/common')
 export class CommonController {
   constructor(private readonly optionsService: OptionsService) {}
