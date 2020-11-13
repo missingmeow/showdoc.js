@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as cookieParser from 'cookie-parser';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { AnyExceptionFilter } from './filter/any-exception.filter';
@@ -18,6 +19,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggingInterceptor());
   // 全局过滤器
   app.useGlobalFilters(new AnyExceptionFilter());
+  // 解析 cookie
+  app.use(cookieParser());
 
   // 添加 OpenApi
   const options = new DocumentBuilder()
