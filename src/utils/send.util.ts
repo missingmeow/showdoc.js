@@ -1,4 +1,4 @@
-import { error_codes } from './const.util';
+import { error_codes } from './constants.util';
 
 /**
  * 封装数据成指定结构并返回去

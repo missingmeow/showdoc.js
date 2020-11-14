@@ -30,4 +30,4 @@ export const error_codes = {
   10308: ' password is wrong', //输入项目密码错误，并且输入错误次数过多
 };
 
-export const jwtSecret = 'missmeow';
+export const jwtSecret = 'missmeow1997';

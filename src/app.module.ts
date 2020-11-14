@@ -4,7 +4,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CommonModule } from './module/common/common.module';
 import { AuthModule } from './module/auth/auth.module';
-import { UsersModule } from './module/users/users.module';
+import { UserModule } from './module/user/user.module';
+import { UserController } from './module/user/user.controller';
 
 @Module({
   imports: [
@@ -15,9 +16,9 @@ import { UsersModule } from './module/users/users.module';
     }),
     CommonModule,
     AuthModule,
-    UsersModule,
+    UserModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, UserController],
   providers: [AppService],
 })
 export class AppModule {}

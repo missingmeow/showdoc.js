@@ -1,20 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import { createHash } from 'crypto';
+import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
+import { encryptPass } from 'src/utils/utils.util';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersService: UsersService, private readonly jwtService: JwtService) {}
+  constructor(private readonly usersService: UserService, private readonly jwtService: JwtService) {}
 
   async validateUser(username: string, pass: string): Promise<any> {
-    const realPass = createHash('md5')
-      .update(Buffer.from(createHash('md5').update(pass).digest('hex')).toString('base64') + '576hbgh6')
-      .digest('hex');
-
     const user = await this.usersService.findOne(username);
-
-    if (user && user.password === realPass) {
+    if (user && user.password === encryptPass(pass)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
     }
