@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Query, Redirect } from '@nestjs/common';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, Redirect } from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 
 @Controller()
 export class AppController {
@@ -11,11 +11,10 @@ export class AppController {
     return;
   }
 
-  @ApiOperation({ summary: '原 PHP 的 API 入口' })
-  @ApiResponse({ status: 302, description: '跳转到参数 s 所指定的 api 上' })
+  @ApiOperation({ summary: '原 PHP 接口入口函数，会直接转发到 s 参数对应的路由上' })
+  @ApiQuery({ name: 's', description: '真正的路由路径' })
   @Post('server/index.php')
-  @Redirect('', 302)
-  phpIndex(@Query('s') url: string) {
-    return { url };
+  rediect() {
+    return;
   }
 }

@@ -14,8 +14,8 @@ export class AnyExceptionFilter<T> implements ExceptionFilter {
         ? exception.getResponse()
         : { statusCode: status, message: 'Unknown Error', error: 'Internal Server Error' };
 
-    if (!(exception instanceof HttpException)) {
-      logger.error(exception.toString());
+    if (!(exception instanceof HttpException) && exception instanceof Error) {
+      logger.error(exception.stack);
     }
 
     logger.error({

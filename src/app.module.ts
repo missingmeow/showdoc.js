@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -6,6 +6,7 @@ import { CommonModule } from './module/common/common.module';
 import { AuthModule } from './module/auth/auth.module';
 import { UserModule } from './module/user/user.module';
 import { UserController } from './module/user/user.controller';
+import { ProxyMiddleware } from './middleware/proxy.middleware';
 
 @Module({
   imports: [
@@ -21,4 +22,8 @@ import { UserController } from './module/user/user.controller';
   controllers: [AppController, UserController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(ProxyMiddleware).forRoutes('server/index.php');
+  }
+}

@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { sendResult } from 'src/utils/send.util';
 import { OptionsService } from './options.service';
@@ -8,8 +8,8 @@ import { OptionsService } from './options.service';
 export class CommonController {
   constructor(private readonly optionsService: OptionsService) {}
 
-  @Get('homePageSetting')
-  async findOne() {
+  @Post('homePageSetting')
+  async homePageSetting() {
     const homePage = await this.optionsService.findOne('home_page');
     const homeItem = await this.optionsService.findOne('home_item');
     const data = {};
