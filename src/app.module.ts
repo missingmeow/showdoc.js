@@ -11,7 +11,7 @@ import { ProxyMiddleware } from './middleware/proxy.middleware';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'better-sqlite3',
+      type: 'sqlite',
       database: './sqlite/showdoc.db.php',
       autoLoadEntities: true,
     }),
