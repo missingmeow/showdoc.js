@@ -1,3 +1,4 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -21,15 +22,18 @@ async function bootstrap() {
   app.useGlobalFilters(new AnyExceptionFilter());
   // 解析 cookie
   app.use(cookieParser());
+  // 引入全局验证管道
+  app.useGlobalPipes(new ValidationPipe());
 
   // 添加 OpenApi
   const options = new DocumentBuilder()
-    .setTitle('Showdoc.js API')
+    .setTitle('Showdoc.js API Document')
     .setDescription(
       `
 本系统的 API 接口直接由原网页调试而来，参考原服务器数据的返回格式，并未做其他额外的修改。\n
 由于原来 PHP 服务器的特性，接口都是通过 /server/index.php?s= 传进来的，这里的实现是把这个请求转发到与 s 参数一致的路由上。\n
-这样做是方便参数验证，也不需要把所有逻辑写在一个接口上。可惜的是由于原来接口的限制，导致不能很好的实现 RESTFul Api 的效果，比如所有接口都是 POST 请求。
+这样做是方便参数验证，也不需要把所有逻辑写在一个接口上。可惜的是由于原来接口的限制，导致不能很好的实现 RESTful Api 的效果。\n
+所有接口请求默认返回 200，错误信息在返回数据中封装，不在 httpCode 上体现。
       `,
     )
     .setVersion('1.0')

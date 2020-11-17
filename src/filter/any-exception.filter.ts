@@ -1,5 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import logger from 'src/utils/logger.util';
+import { sendError } from 'src/utils/send.util';
+import { LoginException } from './custom.exception';
 
 @Catch()
 export class AnyExceptionFilter<T> implements ExceptionFilter {
@@ -8,13 +10,18 @@ export class AnyExceptionFilter<T> implements ExceptionFilter {
     const res = http.getResponse();
     const req = http.getRequest();
 
+    if (exception instanceof LoginException) {
+      res.status(200).send(sendError(exception.getStatus(), exception.message));
+      return;
+    }
+
     const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
     const data =
       exception instanceof HttpException
         ? exception.getResponse()
         : { statusCode: status, message: 'Unknown Error', error: 'Internal Server Error' };
 
-    if (!(exception instanceof HttpException) && exception instanceof Error) {
+    if (exception instanceof Error) {
       logger.error(exception.stack);
     }
 

@@ -12,6 +12,7 @@ export class AppController {
   }
 
   @ApiOperation({ summary: '原 PHP 接口入口函数，会直接转发到 s 参数对应的路由上' })
+  @ApiResponse({ status: 200, description: '路由 s 返回数据' })
   @ApiQuery({ name: 's', description: '真正的路由路径' })
   @Post('server/index.php')
   rediect() {

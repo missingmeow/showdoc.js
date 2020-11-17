@@ -29,6 +29,8 @@
     "@nestjs/swagger": "^4.7.2",
     "@nestjs/typeorm": "^7.1.4",
     "better-sqlite3": "^7.1.1",
+    "class-transformer": "^0.3.1",
+    "class-validator": "^0.12.2",
     "cookie-parser": "^1.4.5",
     "http-proxy-middleware": "^1.0.6",
     "passport": "^0.4.1",
