@@ -39,6 +39,14 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## TODO
+
+more todos please search 'todo'
+
+1. /api/ScriptCron/run 由网站前台脚本触发的周期任务
+
+2. /api/update/checkDb 检测更新数据库
+
 ## 踩过的坑
 
 1. 拦截器不能获取装饰器修改过的 statusCode，如 @HttpCode 和 @Redirect 。 <https://github.com/nestjs/nest/issues/1342>

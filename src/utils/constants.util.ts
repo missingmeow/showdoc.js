@@ -2,7 +2,9 @@
  * 该文件定义一些常用的常量
  */
 
-// PHP 中定义的部分错误代码
+/**
+ * PHP 中定义的部分错误代码
+ */
 export const error_codes = {
   //通用性错误 ：'错误代码':'英文描述'
   10101: '未知错误', //未知错误导致请求接口失败（可能是参数缺失等问题）
@@ -31,8 +33,12 @@ export const error_codes = {
   10308: ' password is wrong', //输入项目密码错误，并且输入错误次数过多
 };
 
-// jwt 密钥
+/**
+ * jwt 密钥
+ */
 export const jwtSecret = 'missingmeow';
 
-// jwt 默认过期时间(s)
-export const jwtExpires = 60 * 60; // * 24 * 60;
+/**
+ * jwt 默认过期时间(s)
+ */
+export const jwtExpires = 60 * 60 * 24 * 60;

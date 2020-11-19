@@ -4,7 +4,7 @@ import { error_codes } from './constants.util';
  * 封装数据成指定结构并返回去
  * @param data
  */
-export function sendResult(data: Record<string, unknown>): Record<string, unknown> {
+export function sendResult(data: Record<string, unknown> | any): Record<string, unknown> {
   const result = {};
   if (data['error_code']) {
     result['error_code'] = data['error_code'];

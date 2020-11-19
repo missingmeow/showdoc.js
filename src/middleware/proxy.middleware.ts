@@ -9,7 +9,7 @@ import { URLSearchParams } from 'url';
 export class ProxyMiddleware implements NestMiddleware {
   private readonly proxy = createProxyMiddleware({
     target: 'http://localhost:3000',
-    proxyTimeout: 10000,
+    // proxyTimeout: 10000, // 代理超时返回，调试不方便
     pathRewrite: function (path: string, req: Request): string {
       return req.query['s'] as string;
     },
