@@ -9,6 +9,8 @@ import { UserController } from './module/user/user.controller';
 import { ProxyMiddleware } from './middleware/proxy.middleware';
 import { ItemModule } from './module/item/item.module';
 import { TeamModule } from './module/team/team.module';
+import { CatalogModule } from './module/catalog/catalog.module';
+import { PageModule } from './module/page/page.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { TeamModule } from './module/team/team.module';
     UserModule,
     ItemModule,
     TeamModule,
+    CatalogModule,
+    PageModule,
   ],
   controllers: [AppController, UserController],
   providers: [AppService],

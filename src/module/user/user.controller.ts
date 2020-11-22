@@ -40,6 +40,7 @@ export class UserController {
     res.status(200).send(sendResult(user));
   }
 
+  @ApiOperation({ summary: '获取个人信息' })
   @UseGuards(JwtAuthGuard)
   @Post('info')
   async info(@Req() req: Request, @Res() res: Response) {

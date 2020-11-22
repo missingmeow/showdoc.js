@@ -9,9 +9,16 @@ import { ItemTop } from './entity/item-top.entity';
 import { ItemToken } from './entity/item-token.entity';
 import { ItemVariable } from './entity/item-variable.entity';
 import { TeamModule } from '../team/team.module';
+import { PageModule } from '../page/page.module';
+import { CatalogModule } from '../catalog/catalog.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Item, ItemMember, ItemSort, ItemTop, ItemToken, ItemVariable]), TeamModule],
+  imports: [
+    TypeOrmModule.forFeature([Item, ItemMember, ItemSort, ItemTop, ItemToken, ItemVariable]),
+    TeamModule,
+    PageModule,
+    CatalogModule,
+  ],
   controllers: [ItemController],
   providers: [ItemService],
 })

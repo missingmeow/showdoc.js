@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import logger from 'src/utils/logger.util';
 import { sendError } from 'src/utils/send.util';
+import { QueryFailedError } from 'typeorm';
 import { LoginException } from './custom.exception';
 
 @Catch()
@@ -32,6 +33,9 @@ export class AnyExceptionFilter<T> implements ExceptionFilter {
         ? exception.getResponse()
         : { statusCode: status, message: 'Unknown Error', error: 'Internal Server Error' };
 
+    if (exception instanceof QueryFailedError) {
+      logger.error(`${exception['query']} ${exception['parameters']}`);
+    }
     if (exception instanceof Error && status != 404) {
       logger.error(exception.stack);
     }

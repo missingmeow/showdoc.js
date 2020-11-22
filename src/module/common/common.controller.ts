@@ -1,5 +1,5 @@
 import { Controller, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { sendResult } from 'src/utils/send.util';
 import { OptionsService } from './options.service';
 
@@ -8,6 +8,7 @@ import { OptionsService } from './options.service';
 export class CommonController {
   constructor(private readonly optionsService: OptionsService) {}
 
+  @ApiOperation({ summary: '获取首页配置信息' })
   @Post('homePageSetting')
   async homePageSetting() {
     const homePage = await this.optionsService.findOne('home_page');
