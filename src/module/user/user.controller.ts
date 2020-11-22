@@ -35,7 +35,7 @@ export class UserController {
 
     res.setHeader(
       'set-cookie',
-      `jwt=${result.access_token}; Expires=${new Date(Date.now() + jwtExpires * 1000)}; Path=/; HttpOnly`,
+      `cookie_token=${result.access_token}; Expires=${new Date(Date.now() + jwtExpires * 1000)}; Path=/; HttpOnly`,
     );
     res.status(200).send(sendResult(user));
   }

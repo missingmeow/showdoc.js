@@ -3,7 +3,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { isNumberString } from 'class-validator';
 import { Request } from 'express';
 import { sendError, sendResult } from 'src/utils/send.util';
-import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { JwtAuthGuard, JwtNoAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { PageService } from '../page/page.service';
 import { TeamService } from '../team/team.service';
 import { ItemInfoDto } from './dto/info.dto';
@@ -42,7 +42,7 @@ export class ItemController {
   }
 
   @ApiOperation({ summary: '获取项目信息' })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtNoAuthGuard)
   @Post('info')
   async info(@Req() req, @Body() info: ItemInfoDto) {
     if (typeof info.item_id == 'string') {

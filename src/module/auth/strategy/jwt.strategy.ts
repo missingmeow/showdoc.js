@@ -10,8 +10,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: function (request) {
         // ExtractJwt.fromAuthHeaderAsBearerToken()
         // 为了兼容showdoc的网页端，只能从 Cookie 获取了
-        if (request.cookies['jwt']) {
-          return request.cookies['jwt'];
+        if (request.cookies['cookie_token']) {
+          return request.cookies['cookie_token'];
         }
         return null;
       },
