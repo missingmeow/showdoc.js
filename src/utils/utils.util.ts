@@ -20,3 +20,17 @@ export function encryptPass(password: string): string {
 export function now(): number {
   return Math.floor(Date.now() / 1000);
 }
+
+/**
+ * 把时间戳转换成字符串，格式为 yyyy-MM-dd HH:mm:ss
+ * @param timestamp 时间戳，单位 秒
+ */
+export function timeString(timestamp: number): string {
+  function n2s(num: number) {
+    return num < 10 ? `0${num}` : `${num}`;
+  }
+  const t = new Date(timestamp * 1000);
+  return `${t.getFullYear()}-${n2s(t.getMonth() + 1)}-${n2s(t.getDay())} ${n2s(t.getHours())}:${n2s(
+    t.getMinutes(),
+  )}:${n2s(t.getSeconds())}`;
+}

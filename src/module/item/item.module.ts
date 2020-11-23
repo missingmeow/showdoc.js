@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ItemController } from './item.controller';
 import { Item } from './entity/item.entity';
@@ -16,10 +16,11 @@ import { CatalogModule } from '../catalog/catalog.module';
   imports: [
     TypeOrmModule.forFeature([Item, ItemMember, ItemSort, ItemTop, ItemToken, ItemVariable]),
     TeamModule,
-    PageModule,
+    forwardRef(() => PageModule),
     CatalogModule,
   ],
   controllers: [ItemController],
   providers: [ItemService],
+  exports: [ItemService],
 })
 export class ItemModule {}

@@ -3,12 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CatalogService } from '../catalog/catalog.service';
 import { Page } from './entity/page.entity';
+import { SinglePage } from './entity/single-page.entity';
 
 @Injectable()
 export class PageService {
   constructor(
     @InjectRepository(Page)
     private readonly pageRepository: Repository<Page>,
+    @InjectRepository(SinglePage)
+    private readonly singlePageRepository: Repository<SinglePage>,
     private readonly catalogService: CatalogService,
   ) {}
 
@@ -28,6 +31,25 @@ export class PageService {
       builder.andWhere('cat_id=:cid', { cid: option.catalogId });
     }
     return builder.execute();
+  }
+
+  /**
+   * 根据关键字查找某个项目的所有页面
+   * @param itemId 项目 id
+   * @param keyword 关键字
+   */
+  async searchPage(itemId: number, keyword: string) {
+    keyword = keyword.trim();
+    keyword = keyword.toLocaleLowerCase();
+    return this.pageRepository
+      .createQueryBuilder()
+      .select('page_id,author_uid,cat_id,page_title,addtime')
+      .where('item_id=:id', { id: itemId })
+      .andWhere('(lower(page_title) like :keyword or lower(page_content) like :keyword )', {
+        keyword: `%${keyword}%`,
+      })
+      .orderBy('s_number', 'ASC')
+      .execute();
   }
 
   /**
@@ -59,21 +81,14 @@ export class PageService {
   }
 
   /**
-   * 根据关键字查找某个项目的所有页面
-   * @param itemId 项目 id
-   * @param keyword 关键字
+   * 根据页面 id 查找页面详情
+   * @param pageId 页面 id
    */
-  async searchPage(itemId: number, keyword: string) {
-    keyword = keyword.trim();
-    keyword = keyword.toLocaleLowerCase();
-    return this.pageRepository
-      .createQueryBuilder()
-      .select('page_id,author_uid,cat_id,page_title,addtime')
-      .where('item_id=:id', { id: itemId })
-      .andWhere('(lower(page_title) like :keyword or lower(page_content) like :keyword )', {
-        keyword: `%${keyword}%`,
-      })
-      .orderBy('s_number', 'ASC')
-      .execute();
+  async findOnePage(pageId: number) {
+    return await this.pageRepository.findOne({ page_id: pageId });
+  }
+
+  async findOneSinglePage(pageId: number) {
+    return await this.singlePageRepository.findOne({ page_id: pageId });
   }
 }

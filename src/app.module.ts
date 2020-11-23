@@ -11,6 +11,7 @@ import { ItemModule } from './module/item/item.module';
 import { TeamModule } from './module/team/team.module';
 import { CatalogModule } from './module/catalog/catalog.module';
 import { PageModule } from './module/page/page.module';
+import { AttachmentModule } from './module/attachment/attachment.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { PageModule } from './module/page/page.module';
     TeamModule,
     CatalogModule,
     PageModule,
+    AttachmentModule,
   ],
   controllers: [AppController, UserController],
   providers: [AppService],
