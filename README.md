@@ -41,7 +41,9 @@ $ npm run test:cov
 
 ## TODO
 
-more todos please search 'todo'
+please search 'todo' for more TODOs.
+
+以下为空接口，待后面再补充，也可能丢弃。
 
 1. /api/ScriptCron/run 由网站前台脚本触发的周期任务
 

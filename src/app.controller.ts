@@ -18,4 +18,16 @@ export class AppController {
   rediect() {
     return;
   }
+
+  @ApiOperation({ summary: 'TODO' })
+  @Get('/api/ScriptCron/run')
+  scriptCron() {
+    return;
+  }
+
+  @ApiOperation({ summary: 'TODO' })
+  @Get('/api/update/checkDb')
+  updateCheckDb() {
+    return;
+  }
 }

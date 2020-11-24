@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Options } from './options.entity';
+import { Options } from './entity/options.entity';
 
 @Injectable()
-export class OptionsService {
+export class CommonService {
   constructor(
     @InjectRepository(Options)
     private readonly optionsRepository: Repository<Options>,
   ) {}
 
-  async findAll(): Promise<Options[]> {
+  async findAllOption(): Promise<Options[]> {
     return this.optionsRepository.find();
   }
 
-  findOne(optionName: string): Promise<Options> {
+  findOneOption(optionName: string): Promise<Options> {
     return this.optionsRepository.findOne({ option_name: optionName });
   }
 }

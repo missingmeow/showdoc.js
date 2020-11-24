@@ -1,5 +1,5 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { sendError, sendResult } from 'src/utils/send.util';
 import { timeString } from 'src/utils/utils.util';
 import { AttachmentService } from '../attachment/attachment.service';
@@ -7,6 +7,7 @@ import { JwtNoAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { ItemService } from '../item/item.service';
 import { PageService } from './page.service';
 
+@ApiTags('page')
 @Controller('api/page')
 export class PageController {
   constructor(

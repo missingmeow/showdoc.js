@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import passport from 'passport';
 import { User } from 'src/module/user/entity/user.entity';
-import { now } from 'src/utils/utils.util';
+import { encryptPass, now } from 'src/utils/utils.util';
 import { Repository } from 'typeorm';
 import { UserToken } from './entity/user-token.entity';
 
@@ -22,6 +23,14 @@ export class UserService {
     return this.userRepository.findOne({ username });
   }
 
+  async register(username: string, password: string) {
+    const user = new User();
+    user.username = username;
+    user.password = encryptPass(password);
+    user.reg_time = now();
+    return this.userRepository.save(user);
+  }
+
   async setLastTime(uid: number) {
     this.userRepository.update({ uid }, { last_login_time: now() });
   }
@@ -34,5 +43,9 @@ export class UserService {
     user.addtime = now();
     user.ip = ip;
     return this.userTokenRepository.save(user);
+  }
+
+  async updateUserToken(uid: number) {
+    this.userTokenRepository.update({ uid: uid }, { token_expire: 0 });
   }
 }
