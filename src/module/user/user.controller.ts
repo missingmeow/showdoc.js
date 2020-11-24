@@ -60,9 +60,14 @@ export class UserController {
   @Post('info')
   async info(@Req() req: Request, @Res() res: Response) {
     const user = await this.userService.findOne(req.user['username']);
+    if (!user) {
+      res.setHeader('Set-Cookie', 'cookie_token=deleted; Expires=0; Path=/; HttpOnly');
+      res.send(sendError(10102));
+      return;
+    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, cookie_token, cookie_token_expire, reg_time, last_login_time, ...result } = user;
-    res.status(200).send(sendResult(result));
+    res.send(sendResult(result));
   }
 
   @ApiOperation({ summary: '注册' })

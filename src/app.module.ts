@@ -17,7 +17,7 @@ import { AttachmentModule } from './module/attachment/attachment.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'sqlite',
-      database: './sqlite/showdoc.db.php',
+      database: 'sqlite/showdoc.db.php',
       autoLoadEntities: true,
     }),
     CommonModule,

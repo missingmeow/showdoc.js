@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
+import { copyFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { AnyExceptionFilter } from './filter/any-exception.filter';
@@ -44,4 +45,13 @@ async function bootstrap() {
   // 监听启动服务器
   await app.listen(3000);
 }
+
+(() => {
+  // 数据库文件初始化
+  if (!existsSync('sqlite/showdoc.db.php')) {
+    copyFileSync('sqlite/showdoc.db.default.php', 'sqlite/showdoc.db.php');
+  }
+  return;
+})();
+
 bootstrap();
