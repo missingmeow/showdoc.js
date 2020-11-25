@@ -51,6 +51,6 @@ please search 'todo' for more TODOs.
 
 ## 踩过的坑
 
-1. 拦截器不能获取装饰器修改过的 statusCode，如 @HttpCode 和 @Redirect 。 <https://github.com/nestjs/nest/issues/1342>
+1. 拦截器不能获取装饰器修改过的 statusCode，如 @HttpCode 和 @Redirect 。[看这里](https://github.com/nestjs/nest/issues/1342)。
 
-2. 如果控制器中使用 @Res 参数，那么必须要在控制器里面调用 res.send，否则会没有返回。
+2. 如果控制器中使用 @Res 参数，那么必须要在控制器里面调用 res.send，否则会没有返回。最新版本有个 `passthrough` 参数可以解决这个问题，[看这里](https://docs.nestjs.com/controllers#library-specific-approach)。
