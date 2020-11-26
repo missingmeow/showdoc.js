@@ -35,4 +35,8 @@ export class CatalogService {
   async findCatalogById(catalogId: number) {
     return this.catalogRepository.findOne({ cat_id: catalogId });
   }
+
+  async save(catalog: Catalog) {
+    return await this.catalogRepository.save(catalog);
+  }
 }

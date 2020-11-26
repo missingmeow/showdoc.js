@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { now } from 'src/utils/utils.util';
 import { Repository } from 'typeorm';
 import { CatalogService } from '../catalog/catalog.service';
 import { Page } from './entity/page.entity';
@@ -90,5 +91,10 @@ export class PageService {
 
   async findOneSinglePage(pageId: number) {
     return await this.singlePageRepository.findOne({ page_id: pageId });
+  }
+
+  async save(page: Page) {
+    page.addtime = now();
+    return await this.pageRepository.save(page);
   }
 }

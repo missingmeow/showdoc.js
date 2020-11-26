@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AllHtmlEntities } from 'html-entities';
+import { now } from 'src/utils/utils.util';
 import { Repository } from 'typeorm';
 import { CatalogService } from '../catalog/catalog.service';
+import { Catalog } from '../catalog/entity/catalog.entity';
+import { Page } from '../page/entity/page.entity';
 import { PageService } from '../page/page.service';
 import { TeamService } from '../team/team.service';
+import { UserService } from '../user/user.service';
 import { ItemMember } from './entity/item-member.entity';
 import { Item } from './entity/item.entity';
 
@@ -17,6 +22,7 @@ export class ItemService {
     private readonly teamService: TeamService,
     private readonly pageService: PageService,
     private readonly catalogService: CatalogService,
+    private readonly userService: UserService,
   ) {}
 
   async findAllItem(): Promise<Item[]> {
@@ -70,6 +76,11 @@ export class ItemService {
    */
   async findItemById(itemId: number): Promise<Item> {
     return this.itemRepository.findOne({ item_id: itemId, is_del: 0 });
+  }
+
+  async saveItem(item: Item) {
+    item.addtime = now();
+    return await this.itemRepository.save(item);
   }
 
   private treeMenuNode(
@@ -215,5 +226,159 @@ export class ItemService {
       return false;
     }
     return true;
+  }
+
+  /**
+   * 导出某个项目的内容，以 json 字符串返回
+   * @param itemId 项目 id
+   */
+  async exportItem(itemId: number): Promise<string> {
+    const item = (
+      await this.itemRepository
+        .createQueryBuilder()
+        .select('item_type,item_name,item_description,password')
+        .where('item_id=:id', { id: itemId })
+        .execute()
+    )[0];
+
+    // 获取项目的所有页面
+    const allPages = await this.pageService.findPage(itemId, {
+      field: 'page_title,cat_id,page_content,s_number,page_comments',
+    });
+    // 获取项目的所有目录
+    const allCatalogs = await this.catalogService.findCatalogByItem(itemId, {
+      field: 'cat_id,cat_name ,parent_cat_id,level,s_number',
+    });
+
+    const menu = {
+      pages: [],
+      catalogs: [],
+    };
+    // 根据所有页面和目录整理树状结构
+    this.treeMenuNode(0, allPages, allCatalogs, menu);
+    item['pages'] = menu;
+    item['members'] = await this.itemMemberRepository
+      .createQueryBuilder()
+      .select('member_group_id ,uid,username')
+      .where('item_id=:id', { id: itemId })
+      .execute();
+
+    return JSON.stringify(item);
+  }
+
+  /**
+   * 导入项目内容，以 json 字符串传进来
+   * @param itemContent 项目内容
+   * @param uid 当前用户 id
+   * @param option 可选选项
+   */
+  async importItem(
+    itemContent: string,
+    uid: number,
+    option?: {
+      item_name?: string;
+      item_description?: string;
+      item_password?: string;
+      item_domain?: string;
+    },
+  ) {
+    if (!option) option = {};
+    const item = JSON.parse(itemContent);
+    const user = await this.userService.findOneById(uid);
+    if (!item) {
+      return false;
+    }
+    const newItem = new Item();
+    if (item.item_domain) {
+      if (await this.itemRepository.findOne({ item_domain: item.item_domain })) {
+        return false;
+      }
+      newItem.item_domain = item.item_domain;
+    }
+    newItem.item_name = this.htmlspecialchars(option.item_name ? option.item_name : item.item.name);
+    newItem.item_domain = this.htmlspecialchars(option.item_domain ? option.item_domain : item.item_domain);
+    newItem.item_type = item.item_type;
+    newItem.item_description = this.htmlspecialchars(
+      option.item_description ? option.item_description : item.item_description,
+    );
+    newItem.password = this.htmlspecialchars(option.item_password ? option.item_password : item.item_password);
+    newItem.uid = uid;
+    newItem.username = user.username;
+    newItem.addtime = now();
+    const i = await this.itemRepository.save(newItem);
+    if (item.pages) {
+      await this.exportMenu(item.pages, {
+        item_id: i.item_id,
+        catalogId: 0,
+        level: 2,
+        uid: user.uid,
+        username: user.username,
+      });
+    }
+    if (item.members) {
+      // 不再导入成员数据 ItemMember
+    }
+    return i.item_id;
+  }
+
+  private htmlspecialchars(str: any): string {
+    if (!str || typeof str != 'string') {
+      return '';
+    }
+
+    const entities = new AllHtmlEntities();
+    return entities.encode(entities.decode(str));
+  }
+
+  /**
+   * 导入菜单的结构数据
+   * @param menu 菜单
+   * @param option 选项
+   */
+  private async exportMenu(
+    menu: { pages?: any[]; catalogs?: any[] },
+    option: {
+      item_id: number;
+      catalogId: number;
+      level: number;
+      uid: number;
+      username: string;
+    },
+  ) {
+    if (menu.catalogs) {
+      menu.catalogs.forEach(async (value) => {
+        const catalog = new Catalog();
+        catalog.cat_name = this.htmlspecialchars(value.cat_name);
+        catalog.s_number = value.s_number;
+        catalog.level = option.level;
+        catalog.item_id = option.item_id;
+        catalog.parent_cat_id = option.catalogId;
+        catalog.addtime = now();
+        const newCata = await this.catalogService.save(catalog);
+
+        await this.exportMenu(value, {
+          item_id: option.item_id,
+          catalogId: newCata.cat_id,
+          level: option.level + 1,
+          uid: option.uid,
+          username: option.username,
+        });
+      });
+    }
+    if (menu.pages) {
+      menu.pages.forEach(async (value) => {
+        const page = new Page();
+        page.author_uid = option.uid;
+        page.author_username = option.username;
+        page.page_title = this.htmlspecialchars(value.page_title);
+        page.page_content = this.htmlspecialchars(value.page_content);
+        page.page_comments = this.htmlspecialchars(value.page_comments);
+        page.s_number = parseInt(value.s_number);
+        page.item_id = option.item_id;
+        page.cat_id = option.catalogId;
+        page.addtime = now();
+        await this.pageService.save(page);
+      });
+    }
   }
 }

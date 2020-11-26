@@ -94,7 +94,8 @@ export class UserController {
 
     // token 写入数据库
     await this.userService.insertUserToken(register.uid, result.access_token, jwtExpires, ip);
-    // TODO: cookie 过期记录使用定期任务来做
+
+    // TODO: 导入示例项目
 
     res.cookie('cookie_token', result.access_token, { maxAge: jwtExpires * 1000, path: '/', httpOnly: true });
 

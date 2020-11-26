@@ -1,12 +1,15 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { isNumberString } from 'class-validator';
+import { isAlphanumeric, isNumberString } from 'class-validator';
 import { Request } from 'express';
 import { sendError, sendResult } from 'src/utils/send.util';
 import { JwtAuthGuard, JwtNoAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { Page } from '../page/entity/page.entity';
 import { PageService } from '../page/page.service';
 import { TeamService } from '../team/team.service';
+import { ItemAddDto } from './dto/add.dto';
 import { ItemInfoDto } from './dto/info.dto';
+import { Item } from './entity/item.entity';
 import { ItemService } from './item.service';
 
 @ApiTags('item')
@@ -41,6 +44,13 @@ export class ItemController {
     return sendResult(items);
   }
 
+  @ApiOperation({ summary: '我的项目列表，同 POST 方法' })
+  @UseGuards(JwtAuthGuard)
+  @Get('myList')
+  async getMyList(@Req() req: Request) {
+    return this.myList(req);
+  }
+
   @ApiOperation({ summary: '获取项目信息' })
   @UseGuards(JwtNoAuthGuard)
   @Post('info')
@@ -60,7 +70,6 @@ export class ItemController {
       return sendError(10101, '项目不存在或者已删除');
     }
 
-    // TODO: 获取 uid
     const uid = req.user ? req.user.uid : 0;
     if (!(await this.itemService.checkItemVisit(uid, info.item_id))) {
       return sendError(10303);
@@ -116,5 +125,70 @@ export class ItemController {
     result['ItemCreator'] = item.is_archived ? false : await this.itemService.checkItemCreator(uid, item.item_id);
 
     return sendResult(result);
+  }
+
+  @ApiOperation({ summary: '新建项目' })
+  @UseGuards(JwtAuthGuard)
+  @Post('add')
+  async add(@Req() req, @Body() addDto: ItemAddDto) {
+    if (addDto.item_domain) {
+      if (!isAlphanumeric(addDto.item_domain)) {
+        return sendError(10305);
+      }
+      if (await this.itemService.findItemByDomain(addDto.item_domain)) {
+        return sendError(10304);
+      }
+    }
+    if (addDto.copy_item_id) {
+      if (!(await this.itemService.checkItemPermn(req.user.uid, Number.parseInt(addDto.copy_item_id)))) {
+        return sendError(10103);
+      }
+      const itemId = await this.itemService.importItem(
+        await this.itemService.exportItem(parseInt(addDto.copy_item_id)),
+        req.user.uid,
+        addDto,
+      );
+      if (itemId) {
+        return sendResult({ item_id: itemId });
+      }
+      return sendError(10101);
+    }
+    const item_type = parseInt(addDto.item_type);
+    const item = new Item();
+    item.uid = req.user.uid;
+    item.username = req.user.username;
+    item.item_name = addDto.item_name;
+    item.password = addDto.password;
+    item.item_description = addDto.item_description;
+    item.item_domain = addDto.item_domain;
+    item.item_type = item_type;
+    const newItem = await this.itemService.saveItem(item);
+    if (!newItem) {
+      return sendError(10101);
+    }
+
+    if (item_type == 2) {
+      //如果是单页应用，则新建一个默认页
+      const page = new Page();
+      page.author_uid = req.user.uid;
+      page.author_username = req.user.username;
+      page.page_title = addDto.item_name;
+      page.item_id = newItem.item_id;
+      page.cat_id = 0;
+      page.page_content = '欢迎使用showdoc。点击右上方的编辑按钮进行编辑吧！';
+      await this.pageService.save(page);
+    } else if (item_type == 4) {
+      //如果是表格应用，则新建一个默认页
+      const page = new Page();
+      page.author_uid = req.user.uid;
+      page.author_username = req.user.username;
+      page.page_title = addDto.item_name;
+      page.item_id = newItem.item_id;
+      page.cat_id = 0;
+      page.page_content = '';
+      await this.pageService.save(page);
+    }
+
+    return sendResult({ item_id: newItem.item_id });
   }
 }

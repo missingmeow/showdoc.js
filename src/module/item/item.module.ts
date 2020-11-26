@@ -11,6 +11,7 @@ import { ItemVariable } from './entity/item-variable.entity';
 import { TeamModule } from '../team/team.module';
 import { PageModule } from '../page/page.module';
 import { CatalogModule } from '../catalog/catalog.module';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CatalogModule } from '../catalog/catalog.module';
     TeamModule,
     forwardRef(() => PageModule),
     CatalogModule,
+    UserModule,
   ],
   controllers: [ItemController],
   providers: [ItemService],

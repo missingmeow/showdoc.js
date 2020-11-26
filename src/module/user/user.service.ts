@@ -23,6 +23,10 @@ export class UserService {
     return this.userRepository.findOne({ username });
   }
 
+  async findOneById(uid: number): Promise<User> {
+    return this.userRepository.findOne({ uid });
+  }
+
   async register(username: string, password: string) {
     const user = new User();
     user.username = username;

@@ -32,9 +32,9 @@ export class Item {
   @Column()
   item_type: number;
 
-  @Column()
+  @Column({ default: 0 })
   is_archived: number;
 
-  @Column()
+  @Column({ default: 0 })
   is_del: number;
 }

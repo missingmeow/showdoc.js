@@ -23,7 +23,7 @@ export class Page {
   @Column()
   page_content: string;
 
-  @Column()
+  @Column({ default: '' })
   page_comments: string;
 
   @Column()
@@ -32,6 +32,6 @@ export class Page {
   @Column()
   addtime: number;
 
-  @Column()
+  @Column({ default: 0 })
   is_del: number;
 }
