@@ -4,6 +4,7 @@ import { now } from 'src/utils/utils.util';
 import { Repository } from 'typeorm';
 import { CatalogService } from '../catalog/catalog.service';
 import { Page } from './entity/page.entity';
+import { Recycle } from './entity/recycle.entity';
 import { SinglePage } from './entity/single-page.entity';
 
 @Injectable()
@@ -13,6 +14,8 @@ export class PageService {
     private readonly pageRepository: Repository<Page>,
     @InjectRepository(SinglePage)
     private readonly singlePageRepository: Repository<SinglePage>,
+    @InjectRepository(Recycle)
+    private readonly recycleRepository: Repository<Recycle>,
     private readonly catalogService: CatalogService,
   ) {}
 
@@ -24,7 +27,7 @@ export class PageService {
   async findPage(itemId: number, option?: { catalogId?: number; field?: string }): Promise<Page[]> {
     if (!option) option = {};
     const builder = this.pageRepository.createQueryBuilder().select('*');
-    builder.where('item_id=:id', { id: itemId }).orderBy({ s_number: 'ASC', page_id: 'ASC' });
+    builder.where('item_id=:id and is_del=0', { id: itemId }).orderBy({ s_number: 'ASC', page_id: 'ASC' });
     if (option.field) {
       builder.select(option.field);
     }
@@ -86,15 +89,40 @@ export class PageService {
    * @param pageId 页面 id
    */
   async findOnePage(pageId: number) {
-    return await this.pageRepository.findOne({ page_id: pageId });
+    return this.pageRepository.findOne({ page_id: pageId });
   }
 
   async findOneSinglePage(pageId: number) {
-    return await this.singlePageRepository.findOne({ page_id: pageId });
+    return this.singlePageRepository.findOne({ page_id: pageId });
   }
 
   async save(page: Page) {
     page.addtime = now();
-    return await this.pageRepository.save(page);
+    return this.pageRepository.save(page);
+  }
+
+  async deletePage(pageId: number) {
+    return this.pageRepository.update({ page_id: pageId }, { is_del: 1 });
+  }
+
+  async recoverPage(pageId: number) {
+    return this.pageRepository.update({ page_id: pageId }, { is_del: 0, cat_id: 0 });
+  }
+
+  async findRecyleList(item_id: number) {
+    return this.recycleRepository
+      .createQueryBuilder()
+      .select('*')
+      .where('item_id=:item_id', { item_id })
+      .orderBy('del_time', 'DESC')
+      .execute();
+  }
+
+  async saveRecycle(recycle: Recycle) {
+    return this.recycleRepository.save(recycle);
+  }
+
+  async deleteRecycle(itemId: number, pageId: number) {
+    return this.recycleRepository.delete({ item_id: itemId, page_id: pageId });
   }
 }

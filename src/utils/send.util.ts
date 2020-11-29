@@ -6,7 +6,7 @@ import { error_codes } from './constants.util';
  */
 export function sendResult(data: Record<string, unknown> | any): Record<string, unknown> {
   const result = {};
-  if (data['error_code']) {
+  if (typeof data == 'object' && data['error_code']) {
     result['error_code'] = data['error_code'];
     result['error_message'] = data['error_message'];
   } else {

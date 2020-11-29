@@ -9,15 +9,17 @@ import { PageService } from './page.service';
 import { PageController } from './page.controller';
 import { ItemModule } from '../item/item.module';
 import { AttachmentModule } from '../attachment/attachment.module';
+import { Recycle } from './entity/recycle.entity';
+import { RecycleController } from './recycle.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Page, SinglePage, PageHistory, PageLock]),
-    CatalogModule,
+    TypeOrmModule.forFeature([Page, SinglePage, PageHistory, PageLock, Recycle]),
+    forwardRef(() => CatalogModule),
     forwardRef(() => ItemModule),
     AttachmentModule,
   ],
-  controllers: [PageController],
+  controllers: [PageController, RecycleController],
   providers: [PageService],
   exports: [PageService],
 })

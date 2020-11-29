@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import passport from 'passport';
 import { User } from 'src/module/user/entity/user.entity';
 import { encryptPass, now } from 'src/utils/utils.util';
 import { Repository } from 'typeorm';
@@ -27,6 +26,13 @@ export class UserService {
     return this.userRepository.findOne({ uid });
   }
 
+  async checkPassword(uid: number, password: string) {
+    const user = await this.findOneById(uid);
+    if (!user) return false;
+    if (user.password != encryptPass(password)) return false;
+    return true;
+  }
+
   async register(username: string, password: string) {
     const user = new User();
     user.username = username;
@@ -51,5 +57,13 @@ export class UserService {
 
   async updateUserToken(uid: number) {
     this.userTokenRepository.update({ uid: uid }, { token_expire: 0 });
+  }
+
+  async getAllUsername(username: string) {
+    return this.userRepository
+      .createQueryBuilder()
+      .select('username', 'value')
+      .where('username like :user', { user: `%${username ? username : ''}%` })
+      .execute();
   }
 }

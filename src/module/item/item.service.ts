@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { createHash } from 'crypto';
 import { AllHtmlEntities } from 'html-entities';
 import { now } from 'src/utils/utils.util';
 import { Repository } from 'typeorm';
@@ -10,31 +11,26 @@ import { PageService } from '../page/page.service';
 import { TeamService } from '../team/team.service';
 import { UserService } from '../user/user.service';
 import { ItemMember } from './entity/item-member.entity';
+import { ItemToken } from './entity/item-token.entity';
 import { Item } from './entity/item.entity';
 
 @Injectable()
 export class ItemService {
   constructor(
-    @InjectRepository(Item)
-    private readonly itemRepository: Repository<Item>,
-    @InjectRepository(ItemMember)
-    private readonly itemMemberRepository: Repository<ItemMember>,
     private readonly teamService: TeamService,
     private readonly pageService: PageService,
     private readonly catalogService: CatalogService,
     private readonly userService: UserService,
+    @InjectRepository(Item)
+    private readonly itemRepository: Repository<Item>,
+    @InjectRepository(ItemToken)
+    private readonly itemTokenRepository: Repository<ItemToken>,
+    @InjectRepository(ItemMember)
+    private readonly itemMemberRepository: Repository<ItemMember>,
   ) {}
 
   async findAllItem(): Promise<Item[]> {
     return this.itemRepository.find();
-  }
-
-  /**
-   * 通过用户 id 查找关联的所有项目
-   * @param uid 用户 id
-   */
-  async findItemMember(uid: number): Promise<ItemMember[]> {
-    return this.itemMemberRepository.find({ uid });
   }
 
   /**
@@ -76,6 +72,18 @@ export class ItemService {
    */
   async findItemById(itemId: number): Promise<Item> {
     return this.itemRepository.findOne({ item_id: itemId, is_del: 0 });
+  }
+
+  async deleteItem(itemId: number) {
+    return this.itemRepository.update({ item_id: itemId }, { is_del: 1, last_update_time: now() });
+  }
+
+  async archiveItem(itemId: number) {
+    return this.itemRepository.update({ item_id: itemId }, { is_archived: 1, last_update_time: now() });
+  }
+
+  async attornItem(itemId: number, username: string, uid: number) {
+    return this.itemRepository.update({ item_id: itemId }, { uid, username });
   }
 
   async saveItem(item: Item) {
@@ -144,7 +152,7 @@ export class ItemService {
       cat_id = itemMember['cat_id'];
     }
     //再看是否添加为团队-项目成员
-    const teamItemMember = await this.teamService.findItemMember(uid, itemId);
+    const teamItemMember = await this.teamService.findTeamItemMemberByUid(uid, itemId);
     if (teamItemMember.length != 0 && teamItemMember[0]['cat_id'] > 0) {
       cat_id = teamItemMember[0]['cat_id'];
     }
@@ -176,7 +184,7 @@ export class ItemService {
       return true;
     }
 
-    const tItemM = await this.teamService.findItemMember(uid, itemId, 1);
+    const tItemM = await this.teamService.findTeamItemMemberByUid(uid, itemId, 1);
     if (tItemM.length != 0) {
       return true;
     }
@@ -216,7 +224,7 @@ export class ItemService {
       return true;
     }
 
-    const titemM = await this.teamService.findItemMember(uid, itemId);
+    const titemM = await this.teamService.findTeamItemMemberByUid(uid, itemId);
     if (titemM.length != 0) {
       return true;
     }
@@ -380,5 +388,56 @@ export class ItemService {
         await this.pageService.save(page);
       });
     }
+  }
+
+  /**
+   * 通过部分条件查找关联的所有项目
+   * @param option 可选项
+   */
+  async findItemMember(option: { uid?: number; item_id?: number; item_member_id?: number }): Promise<ItemMember[]> {
+    return this.itemMemberRepository.find(option);
+  }
+
+  async findItemMemberByItemId(itemId: number) {
+    return await this.itemMemberRepository
+      .createQueryBuilder('item_member')
+      .select('item_member.* , user.name as name')
+      .leftJoin('user', 'user', 'user.uid = item_member.uid')
+      .where('item_id=:id', { id: itemId })
+      .orderBy('addtime', 'ASC')
+      .execute();
+  }
+
+  async deleteItemMember(itemId: number, itemMemberId: number) {
+    return this.itemMemberRepository.delete({ item_id: itemId, item_member_id: itemMemberId });
+  }
+
+  async saveItemMember(itemMember: ItemMember) {
+    return this.itemMemberRepository.save(itemMember);
+  }
+
+  async createItemToken(itemId: number) {
+    const itemToken = new ItemToken();
+    itemToken.api_key = createHash('md5')
+      .update(itemId.toString() + Date.now().toString() + Math.random().toString() + 'missingmeow1991' + 'key')
+      .digest('hex');
+    itemToken.api_token = createHash('md5')
+      .update(itemId.toString() + Date.now().toString() + Math.random().toString() + 'missingmeow1997' + 'token')
+      .digest('hex');
+    itemToken.item_id = itemId;
+    itemToken.addtime = now();
+    return this.itemTokenRepository.save(itemToken);
+  }
+
+  async getItemTokenByItemId(itemId: number) {
+    const item = await this.itemTokenRepository.findOne({ item_id: itemId });
+    if (!item) {
+      return this.createItemToken(itemId);
+    }
+    return item;
+  }
+
+  async deleteItemTokenByItemId(itemId: number) {
+    return this.itemTokenRepository.delete({ item_id: itemId });
   }
 }

@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { isAlphanumeric, isNumberString } from 'class-validator';
 import { Request } from 'express';
 import { sendError, sendResult } from 'src/utils/send.util';
@@ -7,8 +7,10 @@ import { JwtAuthGuard, JwtNoAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { Page } from '../page/entity/page.entity';
 import { PageService } from '../page/page.service';
 import { TeamService } from '../team/team.service';
-import { ItemAddDto } from './dto/add.dto';
-import { ItemInfoDto } from './dto/info.dto';
+import { UserService } from '../user/user.service';
+import { ItemAddDto } from './dto/item-add.dto';
+import { ItemDeleteDto, ItemAttornDto } from './dto/item.dto';
+import { ItemInfoDto } from './dto/item-info.dto';
 import { Item } from './entity/item.entity';
 import { ItemService } from './item.service';
 
@@ -19,6 +21,7 @@ export class ItemController {
     private readonly itemService: ItemService,
     private readonly teamItemService: TeamService,
     private readonly pageService: PageService,
+    private readonly userService: UserService,
   ) {}
 
   @ApiOperation({ summary: '我的项目列表' })
@@ -28,7 +31,7 @@ export class ItemController {
     const itemIds = [];
     const itemMember = await this.itemService.findItemMember(req['user']['uid']);
     itemMember.forEach((value) => itemIds.push(value.item_id));
-    const teamItemMember = await this.teamItemService.findItemMember(req['user']['uid']);
+    const teamItemMember = await this.teamItemService.findTeamItemMemberByUid(req['user']['uid']);
     teamItemMember.forEach((value) => itemIds.push(value.item_id));
 
     const items = await this.itemService.findItem(req['user']['uid'], itemIds);
@@ -190,5 +193,109 @@ export class ItemController {
     }
 
     return sendResult({ item_id: newItem.item_id });
+  }
+
+  @ApiOperation({ summary: '项目详情' })
+  @ApiBody({ schema: { example: { item_id: 'number' } } })
+  @UseGuards(JwtAuthGuard)
+  @Post('detail')
+  async detail(@Req() req, @Body('item_id') itemId: number) {
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+      return sendError(10303);
+    }
+    const item = await this.itemService.findItemById(itemId);
+    return sendResult(item ? item : {});
+  }
+
+  @ApiOperation({ summary: '获取项目分享 key 值' })
+  @ApiBody({ schema: { example: { item_id: 'number' } } })
+  @UseGuards(JwtAuthGuard)
+  @Post('getKey')
+  async getKey(@Req() req, @Body('item_id') itemId: number) {
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+      return sendError(10303);
+    }
+    const item = await this.itemService.getItemTokenByItemId(itemId);
+    if (!item) {
+      sendError(10101);
+    }
+    return sendResult(item);
+  }
+
+  @ApiOperation({ summary: '重置项目分享 key 值' })
+  @ApiBody({ schema: { example: { item_id: 'number' } } })
+  @UseGuards(JwtAuthGuard)
+  @Post('resetKey')
+  async resetKey(@Req() req, @Body('item_id') itemId: number) {
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+      return sendError(10303);
+    }
+    await this.itemService.deleteItemTokenByItemId(itemId);
+    const item = await this.itemService.getItemTokenByItemId(itemId);
+    if (!item) {
+      sendError(10101);
+    }
+    return sendResult(item);
+  }
+
+  @ApiOperation({ summary: '删除项目' })
+  @UseGuards(JwtAuthGuard)
+  @Post('delete')
+  async delete(@Req() req, @Body() delDto: ItemDeleteDto) {
+    const itemId = parseInt(delDto.item_id);
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+      return sendError(10303);
+    }
+    if (!(await this.userService.checkPassword(req.user.uid, delDto.password))) {
+      return sendError(10208);
+    }
+    const result = await this.itemService.deleteItem(itemId);
+    if (result.affected == 0) {
+      return sendError(10101);
+    }
+    return sendResult(result.affected);
+  }
+
+  @ApiOperation({ summary: '归档项目' })
+  @UseGuards(JwtAuthGuard)
+  @Post('archive')
+  async archive(@Req() req, @Body() delDto: ItemDeleteDto) {
+    const itemId = parseInt(delDto.item_id);
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+      return sendError(10303);
+    }
+    if (!(await this.userService.checkPassword(req.user.uid, delDto.password))) {
+      return sendError(10208);
+    }
+    const result = await this.itemService.archiveItem(itemId);
+    if (result.affected == 0) {
+      return sendError(10101);
+    }
+    return sendResult(result.affected);
+  }
+
+  @ApiOperation({ summary: '转让项目' })
+  @UseGuards(JwtAuthGuard)
+  @Post('attorn')
+  async attorn(@Req() req, @Body() attornDto: ItemAttornDto) {
+    const itemId = parseInt(attornDto.item_id);
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+      return sendError(10303);
+    }
+    if (!(await this.userService.checkPassword(req.user.uid, attornDto.password))) {
+      return sendError(10208);
+    }
+
+    const user = await this.userService.findOne(attornDto.username);
+    if (!user) {
+      return sendError(10209);
+    }
+
+    await this.itemService.attornItem(itemId, user.username, user.uid);
+    const item = await this.itemService.findItemById(itemId);
+    if (!item) {
+      return sendError(10101);
+    }
+    return sendResult(item);
   }
 }

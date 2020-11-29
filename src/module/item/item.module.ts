@@ -16,10 +16,10 @@ import { UserModule } from '../user/user.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Item, ItemMember, ItemSort, ItemTop, ItemToken, ItemVariable]),
-    TeamModule,
+    forwardRef(() => TeamModule),
     forwardRef(() => PageModule),
-    CatalogModule,
-    UserModule,
+    forwardRef(() => CatalogModule),
+    forwardRef(() => UserModule),
   ],
   controllers: [ItemController],
   providers: [ItemService],

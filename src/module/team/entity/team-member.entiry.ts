@@ -8,15 +8,15 @@ export class TeamMember {
   @Column()
   team_id: number;
 
-  @Column()
+  @Column({ default: 0 })
   member_uid: number;
 
-  @Column()
+  @Column({ default: '' })
   member_username: string;
 
-  @Column()
+  @Column({ default: 0 })
   addtime: number;
 
-  @Column()
+  @Column({ default: 0 })
   last_update_time: number;
 }

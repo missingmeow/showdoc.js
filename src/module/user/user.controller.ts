@@ -111,4 +111,13 @@ export class UserController {
       user_token: result.access_token,
     });
   }
+
+  @ApiOperation({ summary: '获取所有用户名' })
+  @ApiBody({ required: false, schema: { example: { username: 'string' } } })
+  @UseGuards(JwtAuthGuard)
+  @Post('allUser')
+  async allUser(@Body('username') username: string) {
+    const values = await this.userService.getAllUsername(username);
+    return sendResult(values);
+  }
 }

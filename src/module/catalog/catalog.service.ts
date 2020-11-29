@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { timeString } from 'src/utils/utils.util';
 import { Repository } from 'typeorm';
 import { Catalog } from './entity/catalog.entity';
 
@@ -36,7 +37,39 @@ export class CatalogService {
     return this.catalogRepository.findOne({ cat_id: catalogId });
   }
 
+  /**
+   * 保存一个目录
+   * @param catalog 目录信息
+   */
   async save(catalog: Catalog) {
     return await this.catalogRepository.save(catalog);
+  }
+
+  async getList(itemId: number, isGroup?: boolean) {
+    const catalogs = await this.catalogRepository
+      .createQueryBuilder()
+      .select('*')
+      .where('item_id=:id', { id: itemId })
+      .orderBy('s_number', 'ASC')
+      .addOrderBy('cat_id', 'ASC')
+      .execute();
+    catalogs.forEach((element) => {
+      element['addtime'] = timeString(element['addtime']);
+    });
+    if (isGroup) {
+      return this._treeCatalog(0, catalogs);
+    }
+    return catalogs;
+  }
+
+  private _treeCatalog(catId: number, catalogs: any[]) {
+    const root = [];
+    catalogs.forEach((value) => {
+      if (value.parent_cat_id == catId) {
+        value['sub'] = this._treeCatalog(value.cat_id, catalogs);
+        root.push(value);
+      }
+    });
+    return root;
   }
 }

@@ -14,9 +14,9 @@ export class ItemToken {
   @Column({ length: 200 })
   api_token: string;
 
-  @Column()
+  @Column({ default: 0 })
   addtime: number;
 
-  @Column()
+  @Column({ default: 0 })
   last_check_time: number;
 }

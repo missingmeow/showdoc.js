@@ -11,9 +11,9 @@ export class TeamItem {
   @Column()
   item_id: number;
 
-  @Column()
+  @Column({ default: 0 })
   addtime: number;
 
-  @Column()
+  @Column({ default: 0 })
   last_update_time: number;
 }

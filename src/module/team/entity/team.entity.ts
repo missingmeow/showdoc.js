@@ -5,18 +5,18 @@ export class Team {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column()
+  @Column({ default: '' })
   team_name: string;
 
-  @Column()
+  @Column({ default: 0 })
   uid: number;
 
-  @Column()
+  @Column({ default: '' })
   username: string;
 
-  @Column()
+  @Column({ default: 0 })
   addtime: number;
 
-  @Column()
+  @Column({ default: 0 })
   last_update_time: number;
 }
