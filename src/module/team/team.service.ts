@@ -29,12 +29,20 @@ export class TeamService {
     return this.teamRepository.findOne({ id: teamId });
   }
 
-  async updateTeam(teamId: number, teamName: string) {
-    return this.teamRepository.update({ id: teamId }, { team_name: teamName });
+  async updateTeam(teamId: number, partialEntity: QueryDeepPartialEntity<Team>) {
+    return this.teamRepository.update({ id: teamId }, partialEntity);
   }
 
   async saveTeam(team: Team) {
     return this.teamRepository.save(team);
+  }
+
+  async deleteTeam(teamId: number) {
+    await this.teamRepository.delete({ id: teamId });
+    await this.teamItemRepository.delete({ team_id: teamId });
+    await this.teamMemberRepository.delete({ team_id: teamId });
+    await this.teamItemMemberRepository.delete({ team_id: teamId });
+    return;
   }
 
   async teamMemberCount(teamId: number) {
@@ -49,6 +57,10 @@ export class TeamService {
     return this.teamItemRepository.findOne({ id: teamItemId });
   }
 
+  async findTeamItem(conditions: FindConditions<TeamItem>) {
+    return this.teamItemRepository.find(conditions);
+  }
+
   async findTeamItemByItemId(itemId: number) {
     return this.teamRepository
       .createQueryBuilder('team')
@@ -56,14 +68,6 @@ export class TeamService {
       .leftJoin(TeamItem, 'team_item', 'team.id = team_item.team_id')
       .where('team_item.item_id=:itemId', { itemId })
       .execute();
-  }
-
-  async findTeamItemByTeamId(teamId: number) {
-    return this.teamItemRepository.find({ team_id: teamId });
-  }
-
-  async findTeamItemByItemIdTeamId(itemId: number, teamId: number) {
-    return this.teamItemRepository.findOne({ item_id: itemId, team_id: teamId });
   }
 
   async saveTeamItem(teamItem: TeamItem) {

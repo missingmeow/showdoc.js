@@ -4,10 +4,12 @@ import { createHash } from 'crypto';
 import { AllHtmlEntities } from 'html-entities';
 import { now } from 'src/utils/utils.util';
 import { Repository } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { CatalogService } from '../catalog/catalog.service';
 import { Catalog } from '../catalog/entity/catalog.entity';
 import { Page } from '../page/entity/page.entity';
 import { PageService } from '../page/page.service';
+import { TeamItem } from '../team/entity/team-item.entity';
 import { TeamService } from '../team/team.service';
 import { UserService } from '../user/user.service';
 import { ItemMember } from './entity/item-member.entity';
@@ -28,10 +30,6 @@ export class ItemService {
     @InjectRepository(ItemMember)
     private readonly itemMemberRepository: Repository<ItemMember>,
   ) {}
-
-  async findAllItem(): Promise<Item[]> {
-    return this.itemRepository.find();
-  }
 
   /**
    * 通过用户 id 或者项目 id 数组查找相关的所有项目（非删除项目）
@@ -74,6 +72,15 @@ export class ItemService {
     return this.itemRepository.findOne({ item_id: itemId, is_del: 0 });
   }
 
+  async findItemByTeamId(teamId) {
+    return this.itemRepository
+      .createQueryBuilder('item')
+      .select('item.*, team_item.team_id, team_item.id as id')
+      .leftJoin(TeamItem, 'team_item', 'item.item_id = team_item.item_id')
+      .where('team_item.team_id=:id and item.is_del=0', { id: teamId })
+      .execute();
+  }
+
   async deleteItem(itemId: number) {
     return this.itemRepository.update({ item_id: itemId }, { is_del: 1, last_update_time: now() });
   }
@@ -89,6 +96,10 @@ export class ItemService {
   async saveItem(item: Item) {
     item.addtime = now();
     return await this.itemRepository.save(item);
+  }
+
+  async updateItem(itemId: number, partialEntity: QueryDeepPartialEntity<Item>) {
+    return this.itemRepository.update({ item_id: itemId }, partialEntity);
   }
 
   private treeMenuNode(

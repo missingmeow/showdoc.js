@@ -17,7 +17,7 @@ export class TeamItemMemberController {
     private readonly catalogService: CatalogService,
   ) {}
 
-  @ApiOperation({ summary: '根据项目来获取其绑定的团队列表' })
+  @ApiOperation({ summary: '获取列表' })
   @UseGuards(JwtAuthGuard)
   @Post('getList')
   async getList(@Req() req, @Body() teamItemMemDto: TeamItemMemberListDto) {

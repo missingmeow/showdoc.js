@@ -27,6 +27,22 @@ export class TeamItemController {
     return sendResult(result);
   }
 
+  @ApiOperation({ summary: '根据团队来获取项目列表' })
+  @ApiBody({ schema: { example: { team_id: 'number' } } })
+  @UseGuards(JwtAuthGuard)
+  @Post('getListByTeam')
+  async getListByTeam(@Req() req, @Body('team_id') teamId: number) {
+    const team = await this.teamService.findTeamById(teamId);
+    if (!team || team.uid != req.user.uid) {
+      return sendError(10209, '无此团队或者你无管理此团队的权限');
+    }
+    const result = await this.itemService.findItemByTeamId(teamId);
+    result.forEach((value) => {
+      value.addtime = timeString(value.addtime);
+    });
+    return sendResult(result);
+  }
+
   @ApiOperation({ summary: '添加和编辑' })
   @UseGuards(JwtAuthGuard)
   @Post('save')
@@ -45,7 +61,7 @@ export class TeamItemController {
         if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
           return; // sendError(10303);
         }
-        if (await this.teamService.findTeamItemByItemIdTeamId(teamId, itemId)) {
+        if (await this.teamService.findTeamItem({ team_id: teamId, item_id: itemId })) {
           return;
         }
         teamItem = await this.teamService.saveTeamItem({

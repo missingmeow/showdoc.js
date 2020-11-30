@@ -63,7 +63,7 @@ export class TeamMemberController {
           last_update_time: undefined,
         });
         //检查该团队已经加入了哪些项目
-        const teamItem = await this.teamService.findTeamItemByTeamId(teamId);
+        const teamItem = await this.teamService.findTeamItem({ team_id: teamId });
         teamItem.forEach(async (value) => {
           await this.teamService.saveTeamItemMember({
             team_id: teamId,
