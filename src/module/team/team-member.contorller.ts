@@ -96,7 +96,7 @@ export class TeamMemberController {
       return sendError(10209, '无此团队或者你无管理此团队的权限');
     }
     await this.teamService.deleteTeamItemMember({ member_uid: teamMember.member_uid, team_id: teamMember.team_id });
-    await this.teamService.deleteTeamMember(teamMember.id);
+    await this.teamService.deleteTeamMember({ id: teamMember.id });
     return sendResult({});
   }
 }

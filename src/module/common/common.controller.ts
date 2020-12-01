@@ -66,7 +66,7 @@ export class CommonController {
       return sendError(10303);
     }
 
-    await this.itemService.deleteItemMember(itemId, parseInt(memDto.item_member_id));
+    await this.itemService.deleteItemMember({ item_id: itemId, item_member_id: parseInt(memDto.item_member_id) });
     return sendResult({});
   }
 

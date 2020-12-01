@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/module/user/entity/user.entity';
 import { encryptPass, now } from 'src/utils/utils.util';
-import { Repository } from 'typeorm';
+import { FindConditions, Repository } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { UserToken } from './entity/user-token.entity';
 
 @Injectable()
@@ -14,16 +15,33 @@ export class UserService {
     private readonly userTokenRepository: Repository<UserToken>,
   ) {}
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find();
-  }
-
   async findOne(username: string): Promise<User> {
     return this.userRepository.findOne({ username });
   }
 
   async findOneById(uid: number): Promise<User> {
     return this.userRepository.findOne({ uid });
+  }
+
+  async findUser(username: string, page: number, count: number) {
+    const builder = this.userRepository.createQueryBuilder();
+    builder.offset((page - 1) * count);
+    builder.limit(count);
+    if (username) {
+      builder.where('username like :user', { user: `%${username}%` });
+    }
+    return builder.getManyAndCount();
+  }
+
+  async updateUser(uid: number, partialEntity: QueryDeepPartialEntity<User>) {
+    if (partialEntity.password) {
+      partialEntity.password = encryptPass(partialEntity.password.toString());
+    }
+    return this.userRepository.update({ uid }, partialEntity);
+  }
+
+  async deleteUser(uid: number) {
+    return this.userRepository.delete({ uid });
   }
 
   async checkPassword(uid: number, password: string) {
@@ -41,6 +59,10 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
+  /**
+   * 设置用户的最后登录时间
+   * @param uid 用户 id
+   */
   async setLastTime(uid: number) {
     this.userRepository.update({ uid }, { last_login_time: now() });
   }
@@ -57,6 +79,10 @@ export class UserService {
 
   async updateUserToken(uid: number) {
     this.userTokenRepository.update({ uid: uid }, { token_expire: 0 });
+  }
+
+  async deleteUserToken(criteria: FindConditions<UserToken>) {
+    return this.userTokenRepository.delete(criteria);
   }
 
   async getAllUsername(username: string) {

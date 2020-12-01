@@ -26,6 +26,7 @@ export function now(): number {
  * @param timestamp 时间戳，单位 秒
  */
 export function timeString(timestamp: number): string {
+  if (!timestamp) return '';
   function n2s(num: number) {
     return num < 10 ? `0${num}` : `${num}`;
   }

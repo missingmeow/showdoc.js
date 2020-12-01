@@ -63,7 +63,7 @@ export class ItemController {
       else info.item_id = parseInt(info.item_id);
     }
     if (info.item_domain) {
-      const item = await this.itemService.findItemByDomain(info.item_domain);
+      const item = await this.itemService.findOneItem({ item_domain: info.item_domain });
       if (item) {
         info.item_id = item.item_id;
       }
@@ -78,7 +78,7 @@ export class ItemController {
       return sendError(10303);
     }
 
-    const item = await this.itemService.findItemById(info.item_id);
+    const item = await this.itemService.findOneItem({ item_id: info.item_id, is_del: 0 });
     if (!item) {
       return sendError(10101, '项目不存在或者已删除');
     }
@@ -138,7 +138,7 @@ export class ItemController {
       if (!isAlphanumeric(addDto.item_domain)) {
         return sendError(10305);
       }
-      if (await this.itemService.findItemByDomain(addDto.item_domain)) {
+      if (await this.itemService.findOneItem({ item_domain: addDto.item_domain })) {
         return sendError(10304);
       }
     }
@@ -203,7 +203,7 @@ export class ItemController {
     if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
       return sendError(10303);
     }
-    const item = await this.itemService.findItemById(itemId);
+    const item = await this.itemService.findOneItem({ item_id: itemId, is_del: 0 });
     return sendResult(item ? item : {});
   }
 
@@ -292,7 +292,7 @@ export class ItemController {
     }
 
     await this.itemService.attornItem(itemId, user.username, user.uid);
-    const item = await this.itemService.findItemById(itemId);
+    const item = await this.itemService.findOneItem({ item_id: itemId, is_del: 0 });
     if (!item) {
       return sendError(10101);
     }

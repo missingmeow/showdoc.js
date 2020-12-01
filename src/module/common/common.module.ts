@@ -6,10 +6,11 @@ import { CommonService } from './common.service';
 import { ItemModule } from '../item/item.module';
 import { CatalogModule } from '../catalog/catalog.module';
 import { UserModule } from '../user/user.module';
+import { Template } from './entity/template.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Options]),
+    TypeOrmModule.forFeature([Options, Template]),
     forwardRef(() => ItemModule),
     forwardRef(() => CatalogModule),
     forwardRef(() => UserModule),

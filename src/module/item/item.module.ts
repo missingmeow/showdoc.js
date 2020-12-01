@@ -12,6 +12,7 @@ import { TeamModule } from '../team/team.module';
 import { PageModule } from '../page/page.module';
 import { CatalogModule } from '../catalog/catalog.module';
 import { UserModule } from '../user/user.module';
+import { AdminItemController } from './admin.controller';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { UserModule } from '../user/user.module';
     forwardRef(() => CatalogModule),
     forwardRef(() => UserModule),
   ],
-  controllers: [ItemController],
+  controllers: [ItemController, AdminItemController],
   providers: [ItemService],
   exports: [ItemService],
 })

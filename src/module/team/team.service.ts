@@ -101,8 +101,8 @@ export class TeamService {
     return this.teamMemberRepository.save(teamMember);
   }
 
-  async deleteTeamMember(teamMemberId: number) {
-    return this.teamMemberRepository.delete({ id: teamMemberId });
+  async deleteTeamMember(criteria: FindConditions<TeamMember>) {
+    return this.teamMemberRepository.delete(criteria);
   }
 
   async findOneTeamItemMember(options: FindConditions<TeamItemMember>) {

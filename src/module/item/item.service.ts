@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { createHash } from 'crypto';
 import { AllHtmlEntities } from 'html-entities';
 import { now } from 'src/utils/utils.util';
-import { Repository } from 'typeorm';
+import { FindConditions, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { CatalogService } from '../catalog/catalog.service';
 import { Catalog } from '../catalog/entity/catalog.entity';
@@ -14,6 +14,7 @@ import { TeamService } from '../team/team.service';
 import { UserService } from '../user/user.service';
 import { ItemMember } from './entity/item-member.entity';
 import { ItemToken } from './entity/item-token.entity';
+import { ItemTop } from './entity/item-top.entity';
 import { Item } from './entity/item.entity';
 
 @Injectable()
@@ -29,6 +30,8 @@ export class ItemService {
     private readonly itemTokenRepository: Repository<ItemToken>,
     @InjectRepository(ItemMember)
     private readonly itemMemberRepository: Repository<ItemMember>,
+    @InjectRepository(ItemTop)
+    private readonly itemTopRepository: Repository<ItemTop>,
   ) {}
 
   /**
@@ -56,20 +59,23 @@ export class ItemService {
       .execute();
   }
 
-  /**
-   * 根据项目域名查找项目信息
-   * @param domain 域名
-   */
-  async findItemByDomain(domain: string): Promise<Item> {
-    return this.itemRepository.findOne({ item_domain: domain });
+  async findItemList(page: number, count: number, username: string, itemName: string) {
+    const builder = this.itemRepository.createQueryBuilder();
+    builder.offset((page - 1) * count);
+    builder.limit(count);
+    builder.where('is_del=0');
+    if (username) {
+      builder.andWhere('username like :user', { user: `%${username}%` });
+    }
+    if (itemName) {
+      builder.andWhere('item_name like :item', { item: `%${itemName}%` });
+    }
+    builder.orderBy('addtime', 'DESC');
+    return builder.getManyAndCount();
   }
 
-  /**
-   * 根据项目 id 获取项目信息
-   * @param itemId 项目 id
-   */
-  async findItemById(itemId: number): Promise<Item> {
-    return this.itemRepository.findOne({ item_id: itemId, is_del: 0 });
+  async findOneItem(conditions: FindConditions<Item>) {
+    return this.itemRepository.findOne(conditions);
   }
 
   async findItemByTeamId(teamId) {
@@ -419,8 +425,12 @@ export class ItemService {
       .execute();
   }
 
-  async deleteItemMember(itemId: number, itemMemberId: number) {
-    return this.itemMemberRepository.delete({ item_id: itemId, item_member_id: itemMemberId });
+  async countItemMember(itemId: number) {
+    return this.itemMemberRepository.count({ item_id: itemId });
+  }
+
+  async deleteItemMember(criteria: FindConditions<ItemMember>) {
+    return this.itemMemberRepository.delete(criteria);
   }
 
   async saveItemMember(itemMember: ItemMember) {
@@ -450,5 +460,9 @@ export class ItemService {
 
   async deleteItemTokenByItemId(itemId: number) {
     return this.itemTokenRepository.delete({ item_id: itemId });
+  }
+
+  async deleteItemTop(criteria: FindConditions<ItemTop>) {
+    return this.itemTopRepository.delete(criteria);
   }
 }

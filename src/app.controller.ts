@@ -30,4 +30,10 @@ export class AppController {
   updateCheckDb() {
     return;
   }
+
+  @ApiOperation({ summary: 'TODO' })
+  @Post('api/adminUser/checkUpdate')
+  checkUpdate() {
+    return;
+  }
 }
