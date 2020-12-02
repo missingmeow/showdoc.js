@@ -2,11 +2,12 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger';
 import { sendError, sendResult } from 'src/utils/send.util';
 import { now, timeString } from 'src/utils/utils.util';
-import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { JwtAdminGuard, JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { CatalogService } from '../catalog/catalog.service';
 import { ItemService } from '../item/item.service';
 import { UserService } from '../user/user.service';
 import { CommonService } from './common.service';
+import { AdminSaveConfigDto } from './dto/admin.dto';
 import { MemberDeleteDto, MemberSaveDto } from './dto/member.dto';
 
 @ApiTags('common')
@@ -105,5 +106,49 @@ export class CommonController {
       return sendError(10101);
     }
     return sendResult(itemMember);
+  }
+
+  @ApiOperation({ summary: '加载配置' })
+  @UseGuards(JwtAdminGuard)
+  @Post('adminSetting/loadConfig')
+  async loadConfig() {
+    const ldap_open = await this.commonService.findOneOption('ldap_open');
+    const oss_open = await this.commonService.findOneOption('oss_open');
+    const register_open = await this.commonService.findOneOption('register_open');
+    const ldap_form = await this.commonService.findOneOption('ldap_form');
+    const oss_setting = await this.commonService.findOneOption('oss_setting');
+    const home_page = await this.commonService.findOneOption('home_page');
+    const home_item = await this.commonService.findOneOption('home_item');
+    if (!register_open) {
+      return sendResult([]);
+    }
+    return sendResult({
+      ldap_open: ldap_open ? ldap_open.option_value : false,
+      oss_open: oss_open ? oss_open.option_value : false,
+      register_open: register_open ? register_open.option_value : false,
+      home_page: home_page ? home_page.option_value : false,
+      home_item: home_item ? home_item.option_value : false,
+      ldap_form: ldap_form ? JSON.parse(ldap_form.option_value) : null,
+      oss_setting: oss_setting ? JSON.parse(oss_setting.option_value) : null,
+    });
+  }
+
+  @ApiOperation({ summary: '保存配置' })
+  @UseGuards(JwtAdminGuard)
+  @Post('adminSetting/saveConfig')
+  async saveConfig(@Body() configDto: AdminSaveConfigDto) {
+    await this.commonService.updateOption('register_open', configDto.register_open ? '1' : '0');
+    await this.commonService.updateOption('home_page', configDto.home_page);
+    await this.commonService.updateOption('home_item', configDto.home_item.toString());
+    await this.commonService.updateOption('ldap_open', configDto.ldap_open ? '1' : '0');
+    if (configDto.ldap_open) {
+      // TODO: ldap 登录验证
+      await this.commonService.updateOption('ldap_form', JSON.stringify(configDto.ldap_form));
+    }
+    await this.commonService.updateOption('oss_open', configDto.oss_open ? '1' : '0');
+    if (configDto.oss_open) {
+      await this.commonService.updateOption('oss_setting', JSON.stringify(configDto.oss_setting));
+    }
+    return sendResult([]);
   }
 }

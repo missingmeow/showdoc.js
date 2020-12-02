@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { sendError, sendResult } from 'src/utils/send.util';
 import { timeString } from 'src/utils/utils.util';
-import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { JwtAdminGuard } from '../auth/guard/jwt-auth.guard';
 import { CommonService } from '../common/common.service';
 import { ItemService } from '../item/item.service';
 import { TeamService } from '../team/team.service';
@@ -20,13 +20,9 @@ export class AdminUserController {
   ) {}
 
   @ApiOperation({ summary: '获取所有用户列表' })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAdminGuard)
   @Post('getList')
   async getList(@Req() req, @Body() infoDto: AdminUserDto) {
-    if (!req.user.admin) {
-      return sendError(10103);
-    }
-
     const result: any = await this.userService.findUser(
       infoDto.username,
       parseInt(infoDto.page),
@@ -40,13 +36,9 @@ export class AdminUserController {
   }
 
   @ApiOperation({ summary: '新增用户' })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAdminGuard)
   @Post('addUser')
   async addUser(@Req() req, @Body() addDto: AdminAddUserDto) {
-    if (!req.user.admin) {
-      return sendError(10103);
-    }
-
     if (addDto.uid && addDto.uid != '0') {
       const uid = parseInt(addDto.uid);
       if (addDto.name) {
@@ -73,13 +65,9 @@ export class AdminUserController {
 
   @ApiOperation({ summary: '删除用户' })
   @ApiBody({ schema: { example: { uid: 'number' } } })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAdminGuard)
   @Post('deleteUser')
   async deleteUser(@Req() req, @Body('uid') uid: number) {
-    if (!req.user.admin) {
-      return sendError(10103);
-    }
-
     if (await this.itemService.findOneItem({ uid, is_del: 0 })) {
       return sendError(10101, '该用户名下还有项目，不允许删除。请先将其项目删除或者重新分配/转让');
     }

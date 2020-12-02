@@ -13,12 +13,15 @@ export class CommonService {
     private readonly templateRepository: Repository<Template>,
   ) {}
 
-  async findAllOption(): Promise<Options[]> {
-    return this.optionsRepository.find();
-  }
-
   async findOneOption(optionName: string): Promise<Options> {
     return this.optionsRepository.findOne({ option_name: optionName });
+  }
+
+  async updateOption(optionName: string, optionValue: string) {
+    return this.optionsRepository.query('replace into options (option_name, option_value) values (?, ?)', [
+      optionName,
+      optionValue,
+    ]);
   }
 
   async deleteTeamplate(criteria: FindConditions<Template>) {

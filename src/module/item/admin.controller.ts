@@ -2,7 +2,7 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { sendError, sendResult } from 'src/utils/send.util';
 import { timeString } from 'src/utils/utils.util';
-import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { JwtAdminGuard } from '../auth/guard/jwt-auth.guard';
 import { UserService } from '../user/user.service';
 import { AdminItemDto, AdminItemAttornDto } from './dto/admin.dto';
 import { ItemService } from './item.service';
@@ -13,13 +13,9 @@ export class AdminItemController {
   constructor(private readonly itemService: ItemService, private readonly userService: UserService) {}
 
   @ApiOperation({ summary: '获取所有项目列表' })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAdminGuard)
   @Post('getList')
   async getList(@Req() req, @Body() infoDto: AdminItemDto) {
-    if (!req.user.admin) {
-      return sendError(10103);
-    }
-
     const result: any = await this.itemService.findItemList(
       parseInt(infoDto.page),
       parseInt(infoDto.count),
@@ -36,13 +32,9 @@ export class AdminItemController {
   }
 
   @ApiOperation({ summary: '转让项目' })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAdminGuard)
   @Post('attorn')
   async attorn(@Req() req, @Body() attornDto: AdminItemAttornDto) {
-    if (!req.user.admin) {
-      return sendError(10103);
-    }
-
     const user = await this.userService.findOne(attornDto.username);
     if (!user) {
       return sendError(10209);
@@ -59,13 +51,9 @@ export class AdminItemController {
 
   @ApiOperation({ summary: '删除项目' })
   @ApiBody({ schema: { example: { item_id: 'number' } } })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAdminGuard)
   @Post('deleteItem')
   async deleteItem(@Req() req, @Body('item_id') itemId: number) {
-    if (!req.user.admin) {
-      return sendError(10103);
-    }
-
     const result = await this.itemService.deleteItem(itemId);
     if (result.affected == 0) {
       return sendError(10101);

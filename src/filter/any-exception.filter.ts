@@ -9,7 +9,7 @@ import {
 import logger from 'src/utils/logger.util';
 import { sendError } from 'src/utils/send.util';
 import { QueryFailedError } from 'typeorm';
-import { LoginException } from './custom.exception';
+import { LoginException, NoAuthException } from './custom.exception';
 
 @Catch()
 export class AnyExceptionFilter<T> implements ExceptionFilter {
@@ -18,7 +18,7 @@ export class AnyExceptionFilter<T> implements ExceptionFilter {
     const res = http.getResponse();
     const req = http.getRequest();
 
-    if (exception instanceof LoginException) {
+    if (exception instanceof LoginException || exception instanceof NoAuthException) {
       res.status(200).send(sendError(exception.getStatus(), exception.message));
       return;
     }
