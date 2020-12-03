@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { now } from 'src/utils/utils.util';
-import { Repository } from 'typeorm';
+import { FindConditions, Repository } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { CatalogService } from '../catalog/catalog.service';
 import { Page } from './entity/page.entity';
 import { Recycle } from './entity/recycle.entity';
@@ -101,7 +102,23 @@ export class PageService {
     return this.pageRepository.save(page);
   }
 
-  async deletePage(pageId: number) {
+  async updatePage(criteria: FindConditions<Page>, partialEntity: QueryDeepPartialEntity<Page>) {
+    return this.pageRepository.update(criteria, partialEntity);
+  }
+
+  async deletePage(pageId: number, uid: number, username: string) {
+    const page = await this.pageRepository.findOne(pageId);
+    // 放入回收站
+    await this.saveRecycle({
+      id: undefined,
+      item_id: page.item_id,
+      page_id: page.page_id,
+      page_title: page.page_title,
+      del_by_uid: uid,
+      del_by_username: username,
+      del_time: now(),
+    });
+    // 软删除
     return this.pageRepository.update({ page_id: pageId }, { is_del: 1 });
   }
 

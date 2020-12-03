@@ -3,6 +3,7 @@
  */
 
 import { createHash } from 'crypto';
+import { AllHtmlEntities } from 'html-entities';
 
 /**
  * 明文密码哈希加密，返回加密后的字符串
@@ -34,4 +35,13 @@ export function timeString(timestamp: number): string {
   return `${t.getFullYear()}-${n2s(t.getMonth() + 1)}-${n2s(t.getDay())} ${n2s(t.getHours())}:${n2s(
     t.getMinutes(),
   )}:${n2s(t.getSeconds())}`;
+}
+
+export function htmlspecialchars(str: any): string {
+  if (!str || typeof str != 'string') {
+    return '';
+  }
+
+  const entities = new AllHtmlEntities();
+  return entities.encode(entities.decode(str));
 }

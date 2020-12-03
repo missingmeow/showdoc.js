@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { timeString } from 'src/utils/utils.util';
 import { Repository } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { Catalog } from './entity/catalog.entity';
 
 @Injectable()
@@ -41,8 +42,24 @@ export class CatalogService {
    * 保存一个目录
    * @param catalog 目录信息
    */
-  async save(catalog: Catalog) {
-    return await this.catalogRepository.save(catalog);
+  async saveCatalog(catalog: Catalog) {
+    return this.catalogRepository.save(catalog);
+  }
+
+  async updateCatalog(catalogId: number, partialEntity: QueryDeepPartialEntity<Catalog>) {
+    return this.catalogRepository.update({ cat_id: catalogId }, partialEntity);
+  }
+
+  async deleteCatalog(catalogId: number, callbackFn: (catId: number) => Promise<any>) {
+    //如果有子目录的话，递归把子目录清了
+    const cats = await this.catalogRepository.find({ parent_cat_id: catalogId });
+    await Promise.all(
+      cats.map(async (value) => {
+        await this.deleteCatalog(value.cat_id, callbackFn);
+      }),
+    );
+    await callbackFn(catalogId);
+    return this.catalogRepository.delete({ cat_id: catalogId });
   }
 
   async getList(itemId: number, isGroup?: boolean) {

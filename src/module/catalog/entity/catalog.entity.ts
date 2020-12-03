@@ -11,15 +11,15 @@ export class Catalog {
   @Column()
   item_id: number;
 
-  @Column()
+  @Column({ default: 99 })
   s_number: number;
 
-  @Column()
+  @Column({ default: 0 })
   addtime: number;
 
-  @Column()
+  @Column({ default: 0 })
   parent_cat_id: number;
 
-  @Column()
+  @Column({ default: 2 })
   level: number;
 }

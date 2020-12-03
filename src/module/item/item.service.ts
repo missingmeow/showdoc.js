@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash } from 'crypto';
-import { AllHtmlEntities } from 'html-entities';
-import { now } from 'src/utils/utils.util';
+import { htmlspecialchars, now } from 'src/utils/utils.util';
 import { FindConditions, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { CatalogService } from '../catalog/catalog.service';
@@ -320,13 +319,13 @@ export class ItemService {
       }
       newItem.item_domain = item.item_domain;
     }
-    newItem.item_name = this.htmlspecialchars(option.item_name ? option.item_name : item.item.name);
-    newItem.item_domain = this.htmlspecialchars(option.item_domain ? option.item_domain : item.item_domain);
+    newItem.item_name = htmlspecialchars(option.item_name ? option.item_name : item.item.name);
+    newItem.item_domain = htmlspecialchars(option.item_domain ? option.item_domain : item.item_domain);
     newItem.item_type = item.item_type;
-    newItem.item_description = this.htmlspecialchars(
+    newItem.item_description = htmlspecialchars(
       option.item_description ? option.item_description : item.item_description,
     );
-    newItem.password = this.htmlspecialchars(option.item_password ? option.item_password : item.item_password);
+    newItem.password = htmlspecialchars(option.item_password ? option.item_password : item.item_password);
     newItem.uid = uid;
     newItem.username = user.username;
     newItem.addtime = now();
@@ -344,15 +343,6 @@ export class ItemService {
       // 不再导入成员数据 ItemMember
     }
     return i.item_id;
-  }
-
-  private htmlspecialchars(str: any): string {
-    if (!str || typeof str != 'string') {
-      return '';
-    }
-
-    const entities = new AllHtmlEntities();
-    return entities.encode(entities.decode(str));
   }
 
   /**
@@ -373,13 +363,13 @@ export class ItemService {
     if (menu.catalogs) {
       menu.catalogs.forEach(async (value) => {
         const catalog = new Catalog();
-        catalog.cat_name = this.htmlspecialchars(value.cat_name);
+        catalog.cat_name = htmlspecialchars(value.cat_name);
         catalog.s_number = value.s_number;
         catalog.level = option.level;
         catalog.item_id = option.item_id;
         catalog.parent_cat_id = option.catalogId;
         catalog.addtime = now();
-        const newCata = await this.catalogService.save(catalog);
+        const newCata = await this.catalogService.saveCatalog(catalog);
 
         await this.exportMenu(value, {
           item_id: option.item_id,
@@ -395,9 +385,9 @@ export class ItemService {
         const page = new Page();
         page.author_uid = option.uid;
         page.author_username = option.username;
-        page.page_title = this.htmlspecialchars(value.page_title);
-        page.page_content = this.htmlspecialchars(value.page_content);
-        page.page_comments = this.htmlspecialchars(value.page_comments);
+        page.page_title = htmlspecialchars(value.page_title);
+        page.page_content = htmlspecialchars(value.page_content);
+        page.page_comments = htmlspecialchars(value.page_comments);
         page.s_number = parseInt(value.s_number);
         page.item_id = option.item_id;
         page.cat_id = option.catalogId;
