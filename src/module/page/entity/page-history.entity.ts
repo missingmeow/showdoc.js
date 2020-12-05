@@ -29,9 +29,9 @@ export class PageHistory {
   @Column()
   page_comments: string;
 
-  @Column()
+  @Column({ default: 99 })
   s_number: number;
 
-  @Column()
+  @Column({ default: 0 })
   addtime: number;
 }

@@ -6,7 +6,7 @@ import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { ItemService } from '../item/item.service';
 import { PageService } from '../page/page.service';
 import { CatalogService } from './catalog.service';
-import { CatalogPageDto, CatalogSaveDto } from './dto/catalog.dto';
+import { CatalogDefaultDto, CatalogPageDto, CatalogSaveDto } from './dto/catalog.dto';
 
 @ApiTags('catalog')
 @Controller('api/catalog')
@@ -115,5 +115,44 @@ export class CatalogController {
       field: 'page_id, page_title, s_number',
     });
     return sendResult(result);
+  }
+
+  @ApiOperation({
+    summary: '编辑页面时，自动帮助用户选中目录',
+    description: `选中的规则是：编辑页面则选中该页面目录，复制页面则选中目标页面目录;
+如果是恢复历史页面则使用历史页面的目录，如果都没有则选中用户上次使用的目录`,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Post('getDefaultCat')
+  async getDefaultCat(@Req() req, @Body() defDto: CatalogDefaultDto) {
+    let default_cat_id: number;
+    const pageId = parseInt(defDto.page_id);
+    const pageCopyId = parseInt(defDto.copy_page_id);
+    const pageHistoryId = parseInt(defDto.page_history_id);
+    let itemId = parseInt(defDto.item_id);
+    if (pageId && pageHistoryId) {
+      const page = await this.pageService.findOnePageHistory({ page_history_id: pageHistoryId });
+      if (!page) {
+        return sendError(10101, '历史页面不存在');
+      }
+      default_cat_id = page.cat_id;
+      itemId = page.item_id;
+    } else if (pageId || pageCopyId) {
+      const page = await this.pageService.findOnePage(pageId ? pageId : pageCopyId);
+      if (!page) {
+        return sendError(10101, '页面不存在');
+      }
+      default_cat_id = page.cat_id;
+      itemId = page.item_id;
+    } else {
+      const page = await this.pageService.findPage2(req.user.uid, itemId);
+      default_cat_id = page.cat_id;
+    }
+
+    if (!(await this.itemService.checkItemPermn(req.user.uid, itemId))) {
+      return sendError(10101, '你无权限');
+    }
+
+    return sendResult({ default_cat_id: default_cat_id > 0 ? default_cat_id.toString() : 0 });
   }
 }

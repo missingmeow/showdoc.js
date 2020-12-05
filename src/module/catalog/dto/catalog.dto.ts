@@ -34,3 +34,25 @@ export class CatalogPageDto {
   @IsNumberString()
   cat_id: string;
 }
+
+export class CatalogDefaultDto {
+  @ApiProperty({ description: '页面 id' })
+  @IsOptional()
+  @IsString()
+  page_id: string;
+
+  @ApiProperty({ description: '项目 id' })
+  @IsOptional()
+  @IsString()
+  item_id: string;
+
+  @ApiProperty({ description: '复制页面 id' })
+  @IsOptional()
+  @IsString()
+  copy_page_id: string;
+
+  @ApiProperty({ description: '历史页面 id' })
+  @IsOptional()
+  @IsString()
+  page_history_id: string;
+}

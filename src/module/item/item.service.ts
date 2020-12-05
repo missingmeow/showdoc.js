@@ -392,7 +392,7 @@ export class ItemService {
         page.item_id = option.item_id;
         page.cat_id = option.catalogId;
         page.addtime = now();
-        await this.pageService.save(page);
+        await this.pageService.savePage(page);
       });
     }
   }

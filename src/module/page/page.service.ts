@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { now } from 'src/utils/utils.util';
-import { FindConditions, Repository } from 'typeorm';
+import { DeepPartial, FindConditions, FindManyOptions, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { CatalogService } from '../catalog/catalog.service';
+import { PageHistory } from './entity/page-history.entity';
+import { PageLock } from './entity/page-lock.entity';
 import { Page } from './entity/page.entity';
 import { Recycle } from './entity/recycle.entity';
 import { SinglePage } from './entity/single-page.entity';
@@ -17,6 +19,10 @@ export class PageService {
     private readonly singlePageRepository: Repository<SinglePage>,
     @InjectRepository(Recycle)
     private readonly recycleRepository: Repository<Recycle>,
+    @InjectRepository(PageHistory)
+    private readonly pageHistoryRepository: Repository<PageHistory>,
+    @InjectRepository(PageLock)
+    private readonly pageLockRepository: Repository<PageLock>,
     private readonly catalogService: CatalogService,
   ) {}
 
@@ -32,10 +38,24 @@ export class PageService {
     if (option.field) {
       builder.select(option.field);
     }
-    if (option.catalogId) {
+    if (option.catalogId != undefined) {
       builder.andWhere('cat_id=:cid', { cid: option.catalogId });
     }
     return builder.execute();
+  }
+
+  async findPage2(uid: number, itemId: number) {
+    const result: any[] = await this.pageRepository
+      .createQueryBuilder()
+      .select('*')
+      .where('author_uid=:uid and item_id =:item_id', { uid, item_id: itemId })
+      .orderBy('addtime', 'DESC')
+      .limit(1)
+      .execute();
+    if (result.length == 0) {
+      return { cat_id: 0 };
+    }
+    return result[0];
   }
 
   /**
@@ -97,7 +117,7 @@ export class PageService {
     return this.singlePageRepository.findOne({ page_id: pageId });
   }
 
-  async save(page: Page) {
+  async savePage(page: DeepPartial<Page>) {
     page.addtime = now();
     return this.pageRepository.save(page);
   }
@@ -141,5 +161,41 @@ export class PageService {
 
   async deleteRecycle(itemId: number, pageId: number) {
     return this.recycleRepository.delete({ item_id: itemId, page_id: pageId });
+  }
+
+  async countPageHistory(conditions: FindConditions<PageHistory>) {
+    return this.pageHistoryRepository.count(conditions);
+  }
+
+  async findPageHistory(options: FindManyOptions<PageHistory>) {
+    return this.pageHistoryRepository.find(options);
+  }
+
+  async findOnePageHistory(conditions: FindConditions<PageHistory>) {
+    return this.pageHistoryRepository.findOne(conditions);
+  }
+
+  async savePageHistory(pageHistory: DeepPartial<PageHistory>) {
+    return this.pageHistoryRepository.save(pageHistory);
+  }
+
+  async deletePageHistory(pageId: number, historyId: number) {
+    return this.pageHistoryRepository
+      .createQueryBuilder()
+      .where('page_id=:page_id', { page_id: pageId })
+      .andWhere('page_history_id < :history_id', { history_id: historyId })
+      .delete();
+  }
+
+  async findPageLock(options: FindManyOptions<PageLock>) {
+    return this.pageLockRepository.find(options);
+  }
+
+  async savePageLock(pageLock: PageLock) {
+    return this.pageLockRepository.save(pageLock);
+  }
+
+  async deletePageLock(pageId: number) {
+    return this.pageLockRepository.delete({ page_id: pageId });
   }
 }

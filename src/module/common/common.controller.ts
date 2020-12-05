@@ -9,6 +9,7 @@ import { UserService } from '../user/user.service';
 import { CommonService } from './common.service';
 import { AdminSaveConfigDto } from './dto/admin.dto';
 import { MemberDeleteDto, MemberSaveDto } from './dto/member.dto';
+import { TemplateSaveDto } from './dto/template.dto';
 
 @ApiTags('common')
 @Controller('api')
@@ -150,5 +151,42 @@ export class CommonController {
       await this.commonService.updateOption('oss_setting', JSON.stringify(configDto.oss_setting));
     }
     return sendResult([]);
+  }
+
+  @ApiOperation({ summary: '保存模板' })
+  @UseGuards(JwtAuthGuard)
+  @Post('template/save')
+  async templateSave(@Req() req, @Body() saveDto: TemplateSaveDto) {
+    const template = await this.commonService.saveTemplate({
+      uid: req.user.uid,
+      username: req.user.username,
+      template_title: saveDto.template_title,
+      template_content: saveDto.template_content,
+      addtime: now(),
+    });
+    return sendResult(template);
+  }
+
+  @ApiOperation({ summary: '获取我的模板列表' })
+  @UseGuards(JwtAuthGuard)
+  @Post('template/getList')
+  async templateGetList(@Req() req) {
+    const template: any[] = await this.commonService.findTeamplate({
+      where: { uid: req.user.uid },
+      order: { addtime: 'DESC' },
+    });
+    template.forEach((value) => {
+      value.addtime = timeString(value.addtime);
+    });
+    return sendResult(template);
+  }
+
+  @ApiOperation({ summary: '删除模板' })
+  @ApiBody({ schema: { example: { id: 'number' } } })
+  @UseGuards(JwtAuthGuard)
+  @Post('template/delete')
+  async templateDelete(@Req() req, @Body('id') id: string) {
+    await this.commonService.deleteTeamplate({ uid: req.user.uid, id: parseInt(id) });
+    return sendResult(1);
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindConditions, Repository } from 'typeorm';
+import { DeepPartial, FindConditions, FindManyOptions, Repository } from 'typeorm';
 import { Options } from './entity/options.entity';
 import { Template } from './entity/template.entity';
 
@@ -22,6 +22,14 @@ export class CommonService {
       optionName,
       optionValue,
     ]);
+  }
+
+  async findTeamplate(options: FindManyOptions<Template>) {
+    return this.templateRepository.find(options);
+  }
+
+  async saveTemplate(entities: DeepPartial<Template>) {
+    return this.templateRepository.save(entities);
   }
 
   async deleteTeamplate(criteria: FindConditions<Template>) {

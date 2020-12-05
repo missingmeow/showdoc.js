@@ -179,7 +179,7 @@ export class ItemController {
       page.item_id = newItem.item_id;
       page.cat_id = 0;
       page.page_content = '欢迎使用showdoc。点击右上方的编辑按钮进行编辑吧！';
-      await this.pageService.save(page);
+      await this.pageService.savePage(page);
     } else if (item_type == 4) {
       //如果是表格应用，则新建一个默认页
       const page = new Page();
@@ -189,7 +189,7 @@ export class ItemController {
       page.item_id = newItem.item_id;
       page.cat_id = 0;
       page.page_content = '';
-      await this.pageService.save(page);
+      await this.pageService.savePage(page);
     }
 
     return sendResult({ item_id: newItem.item_id });
