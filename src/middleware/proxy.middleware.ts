@@ -11,7 +11,20 @@ export class ProxyMiddleware implements NestMiddleware {
     target: 'http://localhost:3000',
     // proxyTimeout: 10000, // 代理超时返回，调试不方便
     pathRewrite: function (path: string, req: Request): string {
-      return req.query['s'] as string;
+      const newPath = req.query.s as string;
+      if (newPath == '/api/page/uploadImg') {
+        return '/api/attachment/uploadImg';
+      }
+      if (newPath == '/api/page/upload') {
+        return '/api/attachment/pageAttachmentUpload';
+      }
+      if (newPath == '/api/page/uploadList') {
+        return '/api/attachment/pageAttachmentUploadList';
+      }
+      if (newPath == '/api/page/deleteUploadFile') {
+        return '/api/attachment/deletePageUploadFile';
+      }
+      return newPath;
     },
     logProvider: function () {
       return logger;

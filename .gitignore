@@ -37,3 +37,4 @@ lerna-debug.log*
 /web
 /sqlite
 !/sqlite/showdoc.db.default.php
+/public/uploads

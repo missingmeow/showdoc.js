@@ -35,7 +35,7 @@ export class PageController {
 
     page['addtime'] = timeString(page.addtime);
 
-    page['attachment_count'] = await this.attachmentService.countPage(pageId);
+    page['attachment_count'] = await this.attachmentService.countUploadFile(pageId);
 
     const singlePage = await this.pageService.findOneSinglePage(pageId);
     page['unique_key'] = singlePage ? singlePage.unique_key : '';

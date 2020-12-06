@@ -32,7 +32,7 @@ export function timeString(timestamp: number): string {
     return num < 10 ? `0${num}` : `${num}`;
   }
   const t = new Date(timestamp * 1000);
-  return `${t.getFullYear()}-${n2s(t.getMonth() + 1)}-${n2s(t.getDay())} ${n2s(t.getHours())}:${n2s(
+  return `${t.getFullYear()}-${n2s(t.getMonth() + 1)}-${n2s(t.getDate())} ${n2s(t.getHours())}:${n2s(
     t.getMinutes(),
   )}:${n2s(t.getSeconds())}`;
 }
