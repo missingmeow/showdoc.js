@@ -185,23 +185,29 @@ export class ItemService {
    * @param uid 用户 id
    * @param itemId 项目 id
    */
-  async checkItemPermn(uid: number, itemId: number) {
+  async checkItemPermn(uid: number, itemId: number, session?: Record<string, unknown> | any) {
+    if (session && session[`mamage_item_${itemId}`]) {
+      return true;
+    }
     if (!uid) {
       return false;
     }
 
     const item = await this.itemRepository.findOne({ item_id: itemId, uid });
     if (item) {
+      session && (session[`mamage_item_${itemId}`] = true);
       return true;
     }
 
     const itemM = await this.itemMemberRepository.findOne({ item_id: itemId, uid, member_group_id: 1 });
     if (itemM) {
+      session && (session[`mamage_item_${itemId}`] = true);
       return true;
     }
 
     const tItemM = await this.teamService.findTeamItemMemberByUid(uid, itemId, 1);
     if (tItemM.length != 0) {
+      session && (session[`mamage_item_${itemId}`] = true);
       return true;
     }
 
@@ -213,13 +219,17 @@ export class ItemService {
    * @param uid 用户 id
    * @param itemId 项目 id
    */
-  async checkItemCreator(uid: number, itemId: number): Promise<boolean> {
+  async checkItemCreator(uid: number, itemId: number, session?: Record<string, unknown> | any) {
+    if (session && session[`creat_item_${itemId}`]) {
+      return true;
+    }
     if (!uid) {
       return false;
     }
 
     const item = await this.itemRepository.findOne({ item_id: itemId, uid });
     if (item) {
+      session && (session[`creat_item_${itemId}`] = true);
       return true;
     }
     return false;
@@ -230,18 +240,24 @@ export class ItemService {
    * @param uid 用户 id
    * @param itemId 项目 id
    */
-  async checkItemVisit(uid: number, itemId: number): Promise<boolean> {
+  async checkItemVisit(uid: number, itemId: number, session?: Record<string, unknown> | any) {
+    if (session && session[`visit_item_${itemId}`]) {
+      return true;
+    }
     if (await this.checkItemCreator(uid, itemId)) {
+      session && (session[`visit_item_${itemId}`] = true);
       return true;
     }
 
     const itemM = await this.itemMemberRepository.findOne({ item_id: itemId, uid });
     if (itemM) {
+      session && (session[`visit_item_${itemId}`] = true);
       return true;
     }
 
     const titemM = await this.teamService.findTeamItemMemberByUid(uid, itemId);
     if (titemM.length != 0) {
+      session && (session[`visit_item_${itemId}`] = true);
       return true;
     }
 
@@ -249,6 +265,7 @@ export class ItemService {
     if (item && item.password) {
       return false;
     }
+    session && (session[`visit_item_${itemId}`] = true);
     return true;
   }
 

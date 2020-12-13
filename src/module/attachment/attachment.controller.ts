@@ -6,13 +6,14 @@ import { CommonService } from '../common/common.service';
 import { AttachmentService } from './attachment.service';
 import { now, timeString } from 'src/utils/utils.util';
 import { JwtAdminGuard, JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
-import { ApiBody, ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UploadListDto, UploadMyListDto } from './dto/attachment.dto';
 import { sendError, sendResult } from 'src/utils/send.util';
 import { ItemService } from '../item/item.service';
 import { rmSync } from 'fs';
 import { UserService } from '../user/user.service';
 
+@ApiTags('attachment')
 @Controller('api/attachment')
 export class AttachmentController {
   constructor(
@@ -30,7 +31,7 @@ export class AttachmentController {
     }
     const file = await this.attachmentService.findOneUploadFile({ sign });
     if (!file) {
-      return 'Missing Meow - keep looking!';
+      return 'Keep Looking the Missing Meow!';
     }
     // TODO: 如果是apk文件且在微信浏览器中打开
     await this.attachmentService.updateUploadFile(

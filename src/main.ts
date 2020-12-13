@@ -3,12 +3,14 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
+import * as session from 'express-session';
 import { copyFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { AnyExceptionFilter } from './filter/any-exception.filter';
 import { LoggingInterceptor } from './interceptor/logging.interceptor';
 import { LoggerMiddleware } from './middleware/logger.middleware';
+import { jwtExpires, jwtSecret } from './utils/constants.util';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -23,6 +25,19 @@ async function bootstrap() {
   app.useGlobalFilters(new AnyExceptionFilter());
   // 解析 cookie
   app.use(cookieParser());
+  // session
+  app.use(
+    session({
+      secret: jwtSecret,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        maxAge: jwtExpires * 1000,
+        httpOnly: true,
+        path: '/',
+      },
+    }),
+  );
   // 引入全局验证管道
   app.useGlobalPipes(new ValidationPipe());
 

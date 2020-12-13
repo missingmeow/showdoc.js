@@ -1,5 +1,6 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger';
+import { Request } from 'express';
 import { sendError, sendResult } from 'src/utils/send.util';
 import { now, timeString } from 'src/utils/utils.util';
 import { deflateSync, inflateSync } from 'zlib';
@@ -22,14 +23,14 @@ export class PageController {
   @ApiBody({ schema: { example: { page_id: 'number' } } })
   @UseGuards(JwtNoAuthGuard)
   @Post('info')
-  async info(@Req() req, @Body('page_id') pageId: number) {
+  async info(@Req() req: Request, @Body('page_id') pageId: number) {
     const page: any = await this.pageService.findOnePage(pageId);
     if (!page || page.is_del) {
       return sendError(10101);
     }
 
     const uid = req.user ? req.user['uid'] : 0;
-    if (!(await this.itemService.checkItemVisit(uid, page.item_id))) {
+    if (!(await this.itemService.checkItemVisit(uid, page.item_id, req.session))) {
       return sendError(10103);
     }
 
@@ -45,9 +46,9 @@ export class PageController {
   @ApiOperation({ summary: '保存' })
   @UseGuards(JwtAuthGuard)
   @Post('save')
-  async save(@Req() req, @Body() saveDto: PageSaveDto) {
+  async save(@Req() req: Request, @Body() saveDto: PageSaveDto) {
     const itemId = parseInt(saveDto.item_id);
-    if (!(await this.itemService.checkItemPermn(req.user.uid, itemId))) {
+    if (!(await this.itemService.checkItemPermn(req.user['uid'], itemId, req.session))) {
       return sendError(10103);
     }
     if (!saveDto.page_content) {
@@ -64,8 +65,8 @@ export class PageController {
         page_title: saveDto.page_title ? saveDto.page_title : '默认标题',
         page_content: saveDto.page_content,
         page_comments: saveDto.page_comments ? saveDto.page_comments : '',
-        author_uid: req.user.uid,
-        author_username: req.user.username,
+        author_uid: req.user['uid'],
+        author_username: req.user['username'],
         s_number: saveDto.s_number ? parseInt(saveDto.s_number) : undefined,
       });
       await this.itemService.updateItem(itemId, { last_update_time: now() });
@@ -73,7 +74,7 @@ export class PageController {
     }
     // 在保存前先把当前页面的版本存档
     const lastPage = await this.pageService.findOnePage(pageId);
-    if (!(await this.itemService.checkItemPermn(req.user.uid, lastPage.item_id))) {
+    if (!(await this.itemService.checkItemPermn(req.user['uid'], lastPage.item_id, req.session))) {
       return sendError(10103);
     }
 
@@ -97,8 +98,8 @@ export class PageController {
         page_title: saveDto.page_title ? saveDto.page_title : '默认标题',
         page_content: saveDto.page_content,
         page_comments: saveDto.page_comments ? saveDto.page_comments : '',
-        author_uid: req.user.uid,
-        author_username: req.user.username,
+        author_uid: req.user['uid'],
+        author_username: req.user['username'],
         s_number: saveDto.s_number ? parseInt(saveDto.s_number) : undefined,
       },
     );
@@ -130,7 +131,7 @@ export class PageController {
   @Post('sort')
   async sort(@Req() req, @Body() sortDto: PageSortDto) {
     const itemId = parseInt(sortDto.item_id);
-    if (!(await this.itemService.checkItemPermn(req.user.uid, itemId))) {
+    if (!(await this.itemService.checkItemPermn(req.user.uid, itemId, req.session))) {
       return sendError(10103);
     }
 
@@ -152,7 +153,7 @@ export class PageController {
     if (!page) {
       return sendError(10303);
     }
-    if (!(await this.itemService.checkItemVisit(req.user.uid, page.item_id))) {
+    if (!(await this.itemService.checkItemVisit(req.user.uid, page.item_id, req.session))) {
       return sendError(10303);
     }
 
@@ -179,7 +180,10 @@ export class PageController {
     if (!page) {
       return sendError(10303);
     }
-    if (!(await this.itemService.checkItemCreator(req.user.uid, page.item_id)) && page.author_uid != req.user.uid) {
+    if (
+      !(await this.itemService.checkItemCreator(req.user.uid, page.item_id, req.session)) &&
+      page.author_uid != req.user.uid
+    ) {
       return sendError(10303);
     }
 
@@ -213,7 +217,7 @@ export class PageController {
   @Post('setLock')
   async setLock(@Req() req, @Body() lockDto: PageLockDto) {
     const itemId = parseInt(lockDto.item_id);
-    if (!(await this.itemService.checkItemPermn(req.user.uid, itemId))) {
+    if (!(await this.itemService.checkItemPermn(req.user.uid, itemId, req.session))) {
       return sendError(10103);
     }
 
@@ -240,7 +244,7 @@ export class PageController {
     if (!page) {
       return sendError(10101);
     }
-    if (!(await this.itemService.checkItemVisit(req.user.uid, page.item_id))) {
+    if (!(await this.itemService.checkItemVisit(req.user.uid, page.item_id, req.session))) {
       return sendError(10303);
     }
     const pageHis = await this.pageService.findOnePageHistory({ page_history_id: parseInt(diffDto.page_history_id) });

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Session, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { isAlphanumeric, isNumberString } from 'class-validator';
 import { Request } from 'express';
@@ -9,10 +9,11 @@ import { PageService } from '../page/page.service';
 import { TeamService } from '../team/team.service';
 import { UserService } from '../user/user.service';
 import { ItemAddDto } from './dto/item-add.dto';
-import { ItemDeleteDto, ItemAttornDto } from './dto/item.dto';
+import { ItemDeleteDto, ItemAttornDto, ItemUpdateDto, ItemPwdDto } from './dto/item.dto';
 import { ItemInfoDto } from './dto/item-info.dto';
 import { Item } from './entity/item.entity';
 import { ItemService } from './item.service';
+import * as session from 'express-session';
 
 @ApiTags('item')
 @Controller('api/item')
@@ -57,7 +58,7 @@ export class ItemController {
   @ApiOperation({ summary: '获取项目信息' })
   @UseGuards(JwtNoAuthGuard)
   @Post('info')
-  async info(@Req() req, @Body() info: ItemInfoDto) {
+  async info(@Req() req, @Body() info: ItemInfoDto, @Session() session: session.Session) {
     if (typeof info.item_id == 'string') {
       if (!isNumberString(info.item_id)) info.item_domain = info.item_id;
       else info.item_id = parseInt(info.item_id);
@@ -74,7 +75,7 @@ export class ItemController {
     }
 
     const uid = req.user ? req.user.uid : 0;
-    if (!(await this.itemService.checkItemVisit(uid, info.item_id))) {
+    if (!(await this.itemService.checkItemVisit(uid, info.item_id, session))) {
       return sendError(10303);
     }
 
@@ -135,7 +136,7 @@ export class ItemController {
   @Post('add')
   async add(@Req() req, @Body() addDto: ItemAddDto) {
     if (addDto.item_domain) {
-      if (!isAlphanumeric(addDto.item_domain)) {
+      if (isAlphanumeric(addDto.item_domain)) {
         return sendError(10305);
       }
       if (await this.itemService.findOneItem({ item_domain: addDto.item_domain })) {
@@ -195,12 +196,37 @@ export class ItemController {
     return sendResult({ item_id: newItem.item_id });
   }
 
+  @ApiOperation({ summary: '更新项目信息' })
+  @UseGuards(JwtAuthGuard)
+  @Post('update')
+  async update(@Req() req: Request, @Body() updateDto: ItemUpdateDto) {
+    const itemId = parseInt(updateDto.item_id);
+    if (!(await this.itemService.checkItemCreator(req.user['uid'], itemId, req.session))) {
+      return sendError(10303);
+    }
+    if (updateDto.item_domain) {
+      if (isAlphanumeric(updateDto.item_domain)) {
+        return sendError(10305);
+      }
+      if (await this.itemService.findOneItem({ item_domain: updateDto.item_domain })) {
+        return sendError(10304);
+      }
+    }
+    await this.itemService.updateItem(itemId, {
+      item_name: updateDto.item_name,
+      item_domain: updateDto.item_domain,
+      item_description: updateDto.item_description,
+      password: updateDto.password,
+    });
+    return sendResult([]);
+  }
+
   @ApiOperation({ summary: '项目详情' })
   @ApiBody({ schema: { example: { item_id: 'number' } } })
   @UseGuards(JwtAuthGuard)
   @Post('detail')
   async detail(@Req() req, @Body('item_id') itemId: number) {
-    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId, req.session))) {
       return sendError(10303);
     }
     const item = await this.itemService.findOneItem({ item_id: itemId, is_del: 0 });
@@ -212,7 +238,7 @@ export class ItemController {
   @UseGuards(JwtAuthGuard)
   @Post('getKey')
   async getKey(@Req() req, @Body('item_id') itemId: number) {
-    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId, req.session))) {
       return sendError(10303);
     }
     const item = await this.itemService.getItemTokenByItemId(itemId);
@@ -227,7 +253,7 @@ export class ItemController {
   @UseGuards(JwtAuthGuard)
   @Post('resetKey')
   async resetKey(@Req() req, @Body('item_id') itemId: number) {
-    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId, req.session))) {
       return sendError(10303);
     }
     await this.itemService.deleteItemTokenByItemId(itemId);
@@ -243,7 +269,7 @@ export class ItemController {
   @Post('delete')
   async delete(@Req() req, @Body() delDto: ItemDeleteDto) {
     const itemId = parseInt(delDto.item_id);
-    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId, req.session))) {
       return sendError(10303);
     }
     if (!(await this.userService.checkPassword(req.user.uid, delDto.password))) {
@@ -261,7 +287,7 @@ export class ItemController {
   @Post('archive')
   async archive(@Req() req, @Body() delDto: ItemDeleteDto) {
     const itemId = parseInt(delDto.item_id);
-    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId, req.session))) {
       return sendError(10303);
     }
     if (!(await this.userService.checkPassword(req.user.uid, delDto.password))) {
@@ -279,7 +305,7 @@ export class ItemController {
   @Post('attorn')
   async attorn(@Req() req, @Body() attornDto: ItemAttornDto) {
     const itemId = parseInt(attornDto.item_id);
-    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId))) {
+    if (!(await this.itemService.checkItemCreator(req.user.uid, itemId, req.session))) {
       return sendError(10303);
     }
     if (!(await this.userService.checkPassword(req.user.uid, attornDto.password))) {
@@ -297,5 +323,22 @@ export class ItemController {
       return sendError(10101);
     }
     return sendResult(item);
+  }
+
+  @ApiOperation({ summary: '验证访问密码' })
+  @Post('pwd')
+  async pwd(@Body() pwdDto: ItemPwdDto, @Session() session) {
+    // TODO: verify code
+    const item = await this.itemService.findOneItem({ item_id: parseInt(pwdDto.item_id) });
+    if (!item) {
+      return sendError(10101);
+    }
+    if (item.password != pwdDto.password) {
+      return sendError(10307, '访问密码不正确');
+    }
+    session['visit_item_' + item.item_id.toString()] = true;
+    return sendResult({
+      refer_url: pwdDto.refer_url ? Buffer.from(pwdDto.refer_url, 'base64').toString('ascii') : '',
+    });
   }
 }

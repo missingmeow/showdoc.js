@@ -2,6 +2,7 @@ import { Body, Controller, Get, Ip, Post, Req, Res, UseGuards } from '@nestjs/co
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { jwtExpires } from 'src/utils/constants.util';
+import logger from 'src/utils/logger.util';
 import { sendError, sendResult } from 'src/utils/send.util';
 import { AuthService } from '../auth/auth.service';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
@@ -24,8 +25,8 @@ export class UserController {
   @ApiBody({ type: LoginDto })
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Req() req, @Res({ passthrough: true }) res: Response) {
-    const user = req.user;
+  async login(@Req() req: Request) {
+    const user: any = req.user;
     // TODO: 如果 Item 里面没有数据，则默认导入系统的
 
     // 写入最后登录时间
@@ -39,16 +40,18 @@ export class UserController {
     await this.userService.insertUserToken(user.uid, result.access_token, jwtExpires, req.ip);
     // TODO: cookie 过期记录使用定期任务来做
 
-    res.cookie('cookie_token', result.access_token, { maxAge: jwtExpires * 1000, path: '/', httpOnly: true });
+    req.session['jwt'] = result.access_token;
     return sendResult(user);
   }
 
   @ApiOperation({ summary: '登出' })
   @UseGuards(JwtAuthGuard)
   @Get('logout')
-  async logout(@Req() req, @Res({ passthrough: true }) res: Response) {
-    await this.userService.updateUserToken(req.user.uid);
-    res.cookie('cookie_token', 'deleted', { maxAge: 0 });
+  async logout(@Req() req: Request) {
+    await this.userService.updateUserToken(req.user['uid']);
+    req.session.destroy((err) => {
+      logger.info(req.user['username'] + ' logout');
+    });
     return sendResult({});
   }
 
