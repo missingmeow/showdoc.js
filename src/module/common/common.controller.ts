@@ -1,5 +1,7 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Header, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger';
+import { Request } from 'express';
+import * as captcha from 'svg-captcha';
 import { sendError, sendResult } from 'src/utils/send.util';
 import { now, timeString } from 'src/utils/utils.util';
 import { JwtAdminGuard, JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
@@ -20,6 +22,15 @@ export class CommonController {
     private readonly catalogService: CatalogService,
     private readonly userService: UserService,
   ) {}
+
+  @ApiOperation({ summary: '生成验证码' })
+  @Header('Content-Type', 'image/svg+xml')
+  @Get('common/verify')
+  async verify(@Req() req: Request) {
+    const capt = captcha.create();
+    req.session['v_code'] = capt.text;
+    return capt.data;
+  }
 
   @ApiOperation({ summary: '获取首页配置信息' })
   @Post('common/homePageSetting')

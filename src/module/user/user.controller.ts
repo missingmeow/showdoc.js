@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Ip, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Ip, Post, Req, Res, Session, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { jwtExpires } from 'src/utils/constants.util';
@@ -71,11 +71,16 @@ export class UserController {
 
   @ApiOperation({ summary: '注册' })
   @Post('register')
-  async register(@Body() regDto: RegisterDto, @Ip() ip: string, @Res({ passthrough: true }) res: Response) {
+  async register(@Body() regDto: RegisterDto, @Ip() ip: string, @Session() session) {
     const option = await this.commonService.findOneOption('register_open');
     if (option && option.option_value == '0') {
       return sendError(10101, '管理员已关闭注册');
     }
+
+    if (!session.v_code && regDto.v_code.toLocaleLowerCase() != session.v_code.toLocaleLowerCase()) {
+      return sendError(10206, '验证码不正确');
+    }
+    delete session.v_code;
 
     if (regDto.password != regDto.confirm_password) {
       return sendError(10101, '两次输入的密码不一致！');
@@ -99,8 +104,6 @@ export class UserController {
     await this.userService.insertUserToken(register.uid, result.access_token, jwtExpires, ip);
 
     // TODO: 导入示例项目
-
-    res.cookie('cookie_token', result.access_token, { maxAge: jwtExpires * 1000, path: '/', httpOnly: true });
 
     return sendResult({
       uid: register.uid,
